@@ -81,8 +81,13 @@ Return ONLY valid JSON, no markdown.`
     });
 
     const text = message.content[0].text.trim();
-    const insights = JSON.parse(text);
-    return insights;
+    try {
+      const insights = JSON.parse(text);
+      return Array.isArray(insights) ? insights : [];
+    } catch (parseErr) {
+      console.error('AI insights JSON parse failed:', parseErr.message);
+      return [];
+    }
   } catch (err) {
     console.error('AI analysis failed:', err.message);
     return [];

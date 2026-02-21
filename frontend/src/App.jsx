@@ -12,6 +12,7 @@ import FamilyPage from './pages/FamilyPage';
 import CalendarPage from './pages/CalendarPage';
 import AIPage from './pages/AIPage';
 import TransfersPage from './pages/TransfersPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="family" element={<FamilyPage />} />
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="ai" element={<AIPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

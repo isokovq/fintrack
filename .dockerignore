@@ -1,7 +1,7 @@
-node_modules/
-dist/
+node_modules
+.git
 .env
 backend/.env
 frontend/.env
-*.log
+*.md
 .DS_Store

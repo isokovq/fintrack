@@ -1,6 +1,6 @@
 # 💰 FinTrack — Personal Finance Management App
 
-A full-stack fintech MVP built with React + Node.js + PostgreSQL + Claude AI.
+A full-stack fintech app built with React + Node.js + PostgreSQL + Claude AI.
 
 ## 🚀 Features
 
@@ -16,77 +16,73 @@ A full-stack fintech MVP built with React + Node.js + PostgreSQL + Claude AI.
 
 ---
 
-## 📁 Project Structure
+## ⚡ Quick Start (Local)
 
-```
-fintrack/
-├── backend/           # Node.js + Express API
-│   ├── src/
-│   │   ├── routes/   # API endpoints
-│   │   ├── services/ # AI & cron services
-│   │   ├── middleware/
-│   │   └── index.js  # Entry point
-│   └── schema.sql    # PostgreSQL schema
-└── frontend/          # React app
-    └── src/
-        ├── pages/     # All page components
-        ├── components/ # Reusable UI components
-        ├── context/   # Auth context
-        └── utils/     # Helpers & API client
-```
-
----
-
-## ⚙️ Setup Instructions
-
-### 1. Prerequisites
+### Prerequisites
 - Node.js 18+
 - PostgreSQL 14+
 - An Anthropic API key (from console.anthropic.com)
 
+### 1. Clone & Install
+```bash
+git clone https://github.com/isokovq/fintrack.git
+cd fintrack
+bash setup.sh
+```
+
 ### 2. Database Setup
 ```bash
-# Create database
 psql -U postgres -c "CREATE DATABASE fintrack;"
-
-# Run schema
 psql -U postgres -d fintrack -f backend/schema.sql
 ```
 
-### 3. Backend Setup
-```bash
-cd backend
-
-# Install dependencies
-npm install
-
-# Create .env file
-cp .env.example .env
-# Edit .env and fill in:
-#   DATABASE_URL=postgresql://postgres:your_password@localhost:5432/fintrack
-#   JWT_SECRET=any_random_long_string
-#   ANTHROPIC_API_KEY=sk-ant-...
-
-# Start backend
-npm run dev
-# → API running on http://localhost:5000
+### 3. Configure Environment
+Edit `backend/.env`:
+```
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/fintrack
+JWT_SECRET=any_random_long_string
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-### 4. Frontend Setup
+### 4. Run
 ```bash
-cd frontend
+# Terminal 1 — Backend
+cd backend && npm run dev
 
-# Install dependencies
-npm install
-
-# Create .env file
-cp .env.example .env
-# REACT_APP_API_URL=http://localhost:5000/api
-
-# Start frontend
-npm start
-# → App running on http://localhost:3000
+# Terminal 2 — Frontend
+cd frontend && npm run dev
 ```
+Open **http://localhost:3000**
+
+---
+
+## 🚢 Deploy to Railway (Recommended)
+
+Railway gives you a PostgreSQL database + hosting with one click.
+
+### Step-by-step:
+
+1. **Go to [railway.app](https://railway.app)** and sign in with GitHub.
+
+2. **Create a new project** → "Deploy from GitHub repo" → Select `isokovq/fintrack`.
+
+3. **Add a PostgreSQL database:**
+   - Click "New" → "Database" → "PostgreSQL"
+   - Railway auto-creates `DATABASE_URL` for you
+
+4. **Set environment variables** on the fintrack service:
+   | Variable | Value |
+   |----------|-------|
+   | `DATABASE_URL` | (auto-linked from PostgreSQL) |
+   | `JWT_SECRET` | Any random string (e.g. `mysupersecretkey123`) |
+   | `ANTHROPIC_API_KEY` | Your key from console.anthropic.com |
+   | `NODE_ENV` | `production` |
+
+5. **Run the database schema** — In Railway's PostgreSQL service, open the "Data" tab → "Query" and paste the contents of `backend/schema.sql`, then run it.
+
+6. **Deploy!** Railway auto-builds from the Dockerfile and gives you a public URL like `fintrack-production.up.railway.app`.
+
+7. **Share the URL** with friends — they can register and use it instantly!
 
 ---
 
@@ -124,18 +120,6 @@ npm start
 
 ---
 
-## 🤖 AI Features (Claude Integration)
-
-1. **Auto-categorization** — When adding a transaction with a description, Claude automatically suggests the best category
-2. **Spending Insights** — Analyzes 3 months of history and generates personalized financial insights
-3. **AI Chat** — Ask anything about your finances; Claude has context of your current financial state
-
-### Changing AI Model
-In `backend/src/services/ai.js`, the model is set to `claude-sonnet-4-20250514`.
-You can change it to any available Claude model.
-
----
-
 ## 🔒 Security Notes
 
 - Passwords are hashed with bcrypt
@@ -145,11 +129,24 @@ You can change it to any available Claude model.
 
 ---
 
-## 📈 Future Enhancements
+## 📁 Project Structure
 
-- [ ] CSV/PDF export
-- [ ] Recurring transaction automation
-- [ ] Push notifications (Firebase)
-- [ ] Mobile app (React Native)
-- [ ] Multi-currency dashboard
-- [ ] Receipt scanning with AI OCR
+```
+fintrack/
+├── backend/           # Node.js + Express API
+│   ├── src/
+│   │   ├── routes/    # API endpoints
+│   │   ├── services/  # AI & cron services
+│   │   ├── middleware/ # JWT auth
+│   │   └── index.js   # Entry point (serves frontend in prod)
+│   └── schema.sql     # PostgreSQL schema
+├── frontend/          # React + Vite app
+│   └── src/
+│       ├── pages/     # All page components
+│       ├── components/ # Reusable UI components
+│       ├── context/   # Auth context
+│       └── utils/     # Helpers & API client
+├── Dockerfile         # Production build
+├── railway.toml       # Railway deployment config
+└── setup.sh           # Quick local setup
+```
