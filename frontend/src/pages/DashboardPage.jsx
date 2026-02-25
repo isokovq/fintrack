@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency, formatShortDate } from '../utils/format';
-import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';

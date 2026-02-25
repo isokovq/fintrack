@@ -35,6 +35,10 @@ Return ONLY the UUID of the most appropriate category. Nothing else, just the UU
 // Analyze spending habits and generate insights (category + description-based)
 async function analyzeSpending(userId) {
   try {
+    // Get user's currency
+    const userRow = await db.query('SELECT currency FROM users WHERE id=$1', [userId]);
+    const currency = userRow.rows[0]?.currency || 'USD';
+
     // Category-level summary
     const categoryStats = await db.query(
       `SELECT c.name as category, SUM(t.amount) as total, COUNT(*) as count
@@ -76,6 +80,8 @@ async function analyzeSpending(userId) {
         role: 'user',
         content: `You are a sharp personal finance advisor. Analyze this user's spending data in detail and provide 4-5 actionable insights.
 
+CRITICAL: The user's currency is ${currency}. ALL amounts in the data are in ${currency}. You MUST use ${currency} when referring to any amounts. NEVER use $ or USD unless the user's currency is actually USD. For example, if the currency is UZS, say "50,000 UZS" not "$50,000".
+
 IMPORTANT: Go beyond just category totals. Look at the individual transaction DESCRIPTIONS to find specific patterns, recurring merchants, habits, and potential savings. Be specific — mention actual items/places when you see patterns.
 
 Category totals (last 3 months): ${JSON.stringify(categoryStats.rows)}
@@ -84,7 +90,7 @@ Recent transaction details: ${JSON.stringify(recentDescriptions.rows)}
 
 Monthly totals: ${JSON.stringify(monthComparison.rows)}
 
-Return a JSON array of insights, each with: { "type": "warning|tip|info|saving", "title": "short title", "message": "specific actionable insight referencing actual spending patterns", "emoji": "single emoji" }
+Return a JSON array of insights, each with: { "type": "warning|tip|info|saving", "title": "short title", "message": "specific actionable insight referencing actual spending patterns using ${currency} for all amounts", "emoji": "single emoji" }
 Return ONLY valid JSON, no markdown or explanation.`
       }]
     });
@@ -106,8 +112,11 @@ Return ONLY valid JSON, no markdown or explanation.`
 // AI chat for financial advice
 async function chat(userId, userMessage, history = []) {
   try {
+    const userRow = await db.query('SELECT currency FROM users WHERE id=$1', [userId]);
+    const currency = userRow.rows[0]?.currency || 'USD';
+
     const userStats = await db.query(
-      `SELECT 
+      `SELECT
         (SELECT SUM(amount) FROM transactions WHERE user_id=$1 AND type='income' AND DATE_TRUNC('month', date)=DATE_TRUNC('month', CURRENT_DATE)) as monthly_income,
         (SELECT SUM(amount) FROM transactions WHERE user_id=$1 AND type='expense' AND DATE_TRUNC('month', date)=DATE_TRUNC('month', CURRENT_DATE)) as monthly_expense,
         (SELECT SUM(balance) FROM accounts WHERE user_id=$1) as total_balance`,
@@ -115,12 +124,14 @@ async function chat(userId, userMessage, history = []) {
     );
 
     const systemPrompt = `You are FinTrack AI, a smart and friendly personal finance assistant.
-Current user financial snapshot:
-- Monthly income: $${userStats.rows[0].monthly_income || 0}
-- Monthly expenses: $${userStats.rows[0].monthly_expense || 0}
-- Total balance: $${userStats.rows[0].total_balance || 0}
+IMPORTANT: The user's currency is ${currency}. ALWAYS use ${currency} when referring to amounts. NEVER use $ or USD unless the currency is actually USD.
 
-Give concise, actionable financial advice. Keep responses under 200 words.`;
+Current user financial snapshot:
+- Monthly income: ${userStats.rows[0].monthly_income || 0} ${currency}
+- Monthly expenses: ${userStats.rows[0].monthly_expense || 0} ${currency}
+- Total balance: ${userStats.rows[0].total_balance || 0} ${currency}
+
+Give concise, actionable financial advice. Keep responses under 200 words. Always use ${currency} for all monetary amounts.`;
 
     const messages = [...history, { role: 'user', content: userMessage }];
 
