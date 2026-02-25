@@ -33,7 +33,7 @@ export default function Layout() {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <div className="logo-icon">💰</div>
+          <div className="logo-icon" style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.5px' }}>F</div>
           <span className="logo-text">FinTrack</span>
         </div>
 
@@ -47,9 +47,6 @@ export default function Layout() {
             >
               <Icon size={16} />
               {label}
-              {label === 'AI Assistant' && (
-                <span style={{ marginLeft: 'auto', fontSize: 10, background: 'var(--accent-glow)', color: 'var(--accent)', padding: '1px 6px', borderRadius: 4, border: '1px solid rgba(79,143,255,0.3)' }}>NEW</span>
-              )}
             </NavLink>
           ))}
         </nav>

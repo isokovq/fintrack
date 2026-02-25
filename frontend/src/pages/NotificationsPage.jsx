@@ -3,9 +3,9 @@ import api from '../utils/api';
 import { Bell, Check, CheckCheck, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 
 const TYPE_CONFIG = {
-  danger: { icon: AlertCircle, color: 'var(--red)', bg: 'rgba(255,90,126,0.1)' },
-  warning: { icon: AlertTriangle, color: 'var(--yellow)', bg: 'rgba(251,191,36,0.1)' },
-  info: { icon: Info, color: 'var(--accent)', bg: 'rgba(79,143,255,0.1)' },
+  danger: { icon: AlertCircle, color: 'var(--red)', bg: 'var(--red-bg)' },
+  warning: { icon: AlertTriangle, color: 'var(--yellow)', bg: 'var(--yellow-bg)' },
+  info: { icon: Info, color: 'var(--accent)', bg: 'var(--accent-glow)' },
 };
 
 export default function NotificationsPage() {
@@ -102,7 +102,7 @@ export default function NotificationsPage() {
       ) : (
         <div className="card">
           <div className="empty-state">
-            <div className="empty-icon">🔔</div>
+            <div className="empty-icon"><Bell size={32} color="var(--text-muted)" /></div>
             <p>No notifications yet</p>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
               You'll receive alerts about budgets, debts, and monthly summaries here.

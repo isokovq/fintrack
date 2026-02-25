@@ -32,10 +32,11 @@ Return ONLY the UUID of the most appropriate category. Nothing else, just the UU
   }
 }
 
-// Analyze spending habits and generate insights
+// Analyze spending habits and generate insights (category + description-based)
 async function analyzeSpending(userId) {
   try {
-    const stats = await db.query(
+    // Category-level summary
+    const categoryStats = await db.query(
       `SELECT c.name as category, SUM(t.amount) as total, COUNT(*) as count
        FROM transactions t
        JOIN categories c ON c.id = t.category_id
@@ -44,39 +45,47 @@ async function analyzeSpending(userId) {
       [userId]
     );
 
-    const prevMonthStats = await db.query(
-      `SELECT c.name as category, SUM(t.amount) as total
+    // Detailed transaction descriptions for deeper analysis
+    const recentDescriptions = await db.query(
+      `SELECT t.description, t.amount, t.date::text, c.name as category
        FROM transactions t
-       JOIN categories c ON c.id = t.category_id
-       WHERE t.user_id=$1 AND t.type='expense'
-         AND DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
-       GROUP BY c.name`,
+       LEFT JOIN categories c ON c.id = t.category_id
+       WHERE t.user_id=$1 AND t.type='expense' AND t.date >= NOW() - INTERVAL '2 months'
+         AND t.description IS NOT NULL AND t.description != ''
+       ORDER BY t.date DESC LIMIT 50`,
       [userId]
     );
 
-    const currentMonthStats = await db.query(
-      `SELECT c.name as category, SUM(t.amount) as total
-       FROM transactions t
-       JOIN categories c ON c.id = t.category_id
-       WHERE t.user_id=$1 AND t.type='expense'
-         AND DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE)
-       GROUP BY c.name`,
+    // Month-over-month comparison
+    const monthComparison = await db.query(
+      `SELECT
+         TO_CHAR(date, 'YYYY-MM') as month,
+         SUM(amount) as total,
+         COUNT(*) as tx_count
+       FROM transactions
+       WHERE user_id=$1 AND type='expense' AND date >= NOW() - INTERVAL '3 months'
+       GROUP BY TO_CHAR(date, 'YYYY-MM')
+       ORDER BY month`,
       [userId]
     );
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
+      max_tokens: 700,
       messages: [{
         role: 'user',
-        content: `You are a personal finance advisor. Analyze this spending data and provide 3-4 actionable insights.
+        content: `You are a sharp personal finance advisor. Analyze this user's spending data in detail and provide 4-5 actionable insights.
 
-Top spending categories (last 3 months): ${JSON.stringify(stats.rows)}
-Last month's spending: ${JSON.stringify(prevMonthStats.rows)}
-This month's spending: ${JSON.stringify(currentMonthStats.rows)}
+IMPORTANT: Go beyond just category totals. Look at the individual transaction DESCRIPTIONS to find specific patterns, recurring merchants, habits, and potential savings. Be specific — mention actual items/places when you see patterns.
 
-Return a JSON array of insights, each with: { "type": "warning|tip|info", "title": "...", "message": "...", "emoji": "..." }
-Return ONLY valid JSON, no markdown.`
+Category totals (last 3 months): ${JSON.stringify(categoryStats.rows)}
+
+Recent transaction details: ${JSON.stringify(recentDescriptions.rows)}
+
+Monthly totals: ${JSON.stringify(monthComparison.rows)}
+
+Return a JSON array of insights, each with: { "type": "warning|tip|info|saving", "title": "short title", "message": "specific actionable insight referencing actual spending patterns", "emoji": "single emoji" }
+Return ONLY valid JSON, no markdown or explanation.`
       }]
     });
 

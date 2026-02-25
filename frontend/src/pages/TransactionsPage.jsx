@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import TransactionModal from '../components/transactions/TransactionModal';
-import { Plus, Pencil, Trash2, Search, Filter } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Filter, TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
@@ -61,7 +61,7 @@ export default function TransactionsPage() {
             {['', 'income', 'expense'].map(t => (
               <button key={t} className={`tab-btn ${filters.type === t ? 'active' : ''}`}
                 onClick={() => setFilters(f => ({ ...f, type: t }))}>
-                {t === '' ? 'All' : t === 'income' ? '💰 Income' : '💸 Expense'}
+                {t === '' ? 'All' : t === 'income' ? 'Income' : 'Expense'}
               </button>
             ))}
           </div>
@@ -73,7 +73,7 @@ export default function TransactionsPage() {
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">💳</div>
+            <div className="empty-icon"><CreditCard size={32} color="var(--text-muted)" /></div>
             <p>No transactions found</p>
             <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setShowModal(true)}>
               <Plus size={14} /> Add your first transaction

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
-import { Plus, X, ArrowRight } from 'lucide-react';
+import { Plus, X, ArrowRight, ArrowLeftRight } from 'lucide-react';
 
 export default function TransfersPage() {
   const { user } = useAuth();
@@ -45,7 +45,7 @@ export default function TransfersPage() {
       <div className="card">
         {transfers.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🔄</div>
+            <div className="empty-icon"><ArrowLeftRight size={32} color="var(--text-muted)" /></div>
             <p>No transfers yet</p>
           </div>
         ) : (

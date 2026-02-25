@@ -3,18 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { Plus, X, Trash2, Pencil } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, CreditCard } from 'lucide-react';
 
-const COLORS = ['#4f8fff', '#22d3a0', '#ff5a7e', '#a78bfa', '#fbbf24', '#06b6d4', '#f97316', '#ec4899'];
+const COLORS = ['#1a56db', '#059669', '#dc2626', '#7c3aed', '#d97706', '#0891b2', '#c026d3', '#475569'];
 const ACCOUNT_TYPES = ['bank', 'card', 'cash', 'savings', 'investment'];
-const ACCOUNT_EMOJIS = { bank: '🏦', card: '💳', cash: '💵', savings: '🏧', investment: '📈' };
+const ACCOUNT_LABELS = { bank: 'Bank', card: 'Card', cash: 'Cash', savings: 'Savings', investment: 'Investment' };
 
 export default function AccountsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editAcc, setEditAcc] = useState(null);
-  const [form, setForm] = useState({ name: '', type: 'bank', currency: 'USD', balance: '', color: '#4f8fff' });
+  const [form, setForm] = useState({ name: '', type: 'bank', currency: 'USD', balance: '', color: '#1a56db' });
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['accounts'],
@@ -37,7 +37,7 @@ export default function AccountsPage() {
     setShowModal(true);
   };
 
-  const closeModal = () => { setShowModal(false); setEditAcc(null); setForm({ name: '', type: 'bank', currency: 'USD', balance: '', color: '#4f8fff' }); };
+  const closeModal = () => { setShowModal(false); setEditAcc(null); setForm({ name: '', type: 'bank', currency: 'USD', balance: '', color: '#1a56db' }); };
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
@@ -47,8 +47,8 @@ export default function AccountsPage() {
     <div className="page-content fade-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700 }}>Accounts & Cards</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Total balance: <strong style={{ color: 'var(--accent)', fontFamily: 'DM Mono' }}>{formatCurrency(totalBalance, user?.currency)}</strong></p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>Accounts</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Total: <strong style={{ color: 'var(--text-primary)', fontFamily: 'DM Mono' }}>{formatCurrency(totalBalance, user?.currency)}</strong></p>
         </div>
         <button className="btn btn-primary" onClick={() => { setEditAcc(null); setShowModal(true); }}>
           <Plus size={15} /> Add Account
@@ -60,8 +60,10 @@ export default function AccountsPage() {
           {accounts.map(acc => (
             <div key={acc.id} className="account-card">
               <div className="account-pattern" style={{ background: acc.color }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 28 }}>{ACCOUNT_EMOJIS[acc.type] || '💳'}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 8, background: `${acc.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CreditCard size={18} color={acc.color} />
+                </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button className="btn-icon" onClick={() => openEdit(acc)}><Pencil size={12} /></button>
                   <button className="btn-icon" style={{ color: 'var(--red)' }}
@@ -70,10 +72,10 @@ export default function AccountsPage() {
                   </button>
                 </div>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800, fontFamily: 'DM Mono', marginBottom: 4, color: parseFloat(acc.balance) >= 0 ? 'var(--text-primary)' : 'var(--red)' }}>
+              <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Mono', marginBottom: 4, color: parseFloat(acc.balance) >= 0 ? 'var(--text-primary)' : 'var(--red)', letterSpacing: '-0.5px' }}>
                 {formatCurrency(acc.balance, acc.currency)}
               </div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>{acc.name}</div>
+              <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 14 }}>{acc.name}</div>
               <div style={{ display: 'flex', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
                 <span className="badge badge-blue">{acc.type}</span>
                 <span>{acc.currency}</span>
@@ -90,7 +92,6 @@ export default function AccountsPage() {
           {accounts.length === 0 && (
             <div style={{ gridColumn: '1/-1' }}>
               <div className="empty-state">
-                <div className="empty-icon">🏦</div>
                 <p>No accounts yet. Add your first account!</p>
               </div>
             </div>
@@ -114,7 +115,7 @@ export default function AccountsPage() {
                 <div className="form-group">
                   <label className="form-label">Type</label>
                   <select className="form-control" value={form.type} onChange={set('type')}>
-                    {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{ACCOUNT_EMOJIS[t]} {t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+                    {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{ACCOUNT_LABELS[t]}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
@@ -135,7 +136,7 @@ export default function AccountsPage() {
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {COLORS.map(c => (
                     <button key={c} type="button" onClick={() => setForm(f => ({ ...f, color: c }))}
-                      style={{ width: 28, height: 28, borderRadius: 8, background: c, border: form.color === c ? '2px solid white' : '2px solid transparent', cursor: 'pointer', transition: 'transform 0.1s' }}
+                      style={{ width: 28, height: 28, borderRadius: 6, background: c, border: form.color === c ? '2px solid var(--text-primary)' : '2px solid transparent', cursor: 'pointer' }}
                     />
                   ))}
                 </div>

@@ -60,6 +60,8 @@ INSERT INTO categories (id, user_id, name, type, icon, color, is_default) VALUES
   (uuid_generate_v4(), NULL, 'Education', 'expense', 'book', '#3b82f6', true),
   (uuid_generate_v4(), NULL, 'Utilities', 'expense', 'zap', '#14b8a6', true),
   (uuid_generate_v4(), NULL, 'Travel', 'expense', 'plane', '#a855f7', true),
+  (uuid_generate_v4(), NULL, 'Groceries', 'expense', 'shopping-cart', '#22c55e', true),
+  (uuid_generate_v4(), NULL, 'Sports & Nutrition', 'expense', 'dumbbell', '#f97316', true),
   (uuid_generate_v4(), NULL, 'Other Expense', 'expense', 'more-horizontal', '#6b7280', true),
   (uuid_generate_v4(), NULL, 'Salary', 'income', 'briefcase', '#22c55e', true),
   (uuid_generate_v4(), NULL, 'Freelance', 'income', 'laptop', '#10b981', true),

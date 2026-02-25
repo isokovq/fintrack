@@ -3,7 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2, Target, TrendingUp, Utensils, Car, ShoppingBag, Tv, Heart, Home, BookOpen, Zap, Plane, Tag, BarChart3, ShoppingCart, Dumbbell } from 'lucide-react';
+
+const ICON_MAP = {
+  utensils: Utensils, car: Car, 'shopping-bag': ShoppingBag, tv: Tv, heart: Heart,
+  home: Home, book: BookOpen, zap: Zap, plane: Plane, 'shopping-cart': ShoppingCart,
+  dumbbell: Dumbbell
+};
 
 export default function BudgetPage() {
   const { user } = useAuth();
@@ -57,7 +63,7 @@ export default function BudgetPage() {
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Track and manage your spending limits</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost" onClick={() => setShowIncomeModal(true)}>💰 Income Target</button>
+          <button className="btn btn-ghost" onClick={() => setShowIncomeModal(true)}><Target size={14} /> Income Target</button>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}><Plus size={15} /> Add Budget</button>
         </div>
       </div>
@@ -76,7 +82,7 @@ export default function BudgetPage() {
 
       {/* Income target card */}
       {incomeBudget && (
-        <div className="card" style={{ marginBottom: 20, background: 'rgba(34,211,160,0.05)', borderColor: 'rgba(34,211,160,0.2)' }}>
+        <div className="card" style={{ marginBottom: 20, background: 'var(--green-bg)', borderColor: 'rgba(5,150,105,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>Income Target</div>
@@ -84,7 +90,9 @@ export default function BudgetPage() {
                 {formatCurrency(incomeBudget.actual_income, user?.currency)} <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>/ {formatCurrency(incomeBudget.target_amount, user?.currency)}</span>
               </div>
             </div>
-            <div style={{ fontSize: 32 }}>{parseFloat(incomeBudget.actual_income) >= parseFloat(incomeBudget.target_amount) ? '🎯' : '💪'}</div>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(5,150,105,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {parseFloat(incomeBudget.actual_income) >= parseFloat(incomeBudget.target_amount) ? <Target size={20} color="var(--green)" /> : <TrendingUp size={20} color="var(--green)" />}
+            </div>
           </div>
           <div className="progress-bar" style={{ marginTop: 12 }}>
             <div className="progress-fill" style={{ width: `${Math.min(100, (incomeBudget.actual_income / incomeBudget.target_amount) * 100)}%`, background: 'var(--green)' }} />
@@ -115,7 +123,7 @@ export default function BudgetPage() {
       <div className="card">
         {budgets.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📊</div>
+            <div className="empty-icon"><BarChart3 size={32} color="var(--text-muted)" /></div>
             <p>No budgets set for this month</p>
             <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setShowModal(true)}>
               <Plus size={14} /> Set Budget Limits
@@ -129,8 +137,8 @@ export default function BudgetPage() {
             <div key={b.id} style={{ padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: `${b.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-                    {b.icon === 'utensils' ? '🍽️' : b.icon === 'car' ? '🚗' : b.icon === 'shopping-bag' ? '🛍️' : b.icon === 'tv' ? '🎬' : b.icon === 'heart' ? '❤️' : b.icon === 'home' ? '🏠' : b.icon === 'book' ? '📚' : b.icon === 'zap' ? '⚡' : b.icon === 'plane' ? '✈️' : '🏷️'}
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: `${b.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {(() => { const Icon = ICON_MAP[b.icon] || Tag; return <Icon size={16} color={b.color} />; })()}
                   </div>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{b.category_name}</div>
@@ -141,7 +149,7 @@ export default function BudgetPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className={`badge ${over ? 'badge-red' : warn ? 'badge-yellow' : 'badge-green'}`}>
-                    {over ? '⚠️ Over limit' : `${Math.round(pct)}%`}
+                    {over ? 'Over limit' : `${Math.round(pct)}%`}
                   </span>
                   <button className="btn-icon" style={{ color: 'var(--red)' }} onClick={() => window.confirm('Remove budget?') && deleteBudget.mutate(b.id)}>
                     <Trash2 size={12} />

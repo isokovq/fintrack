@@ -50,7 +50,7 @@ export default function AIPage() {
   return (
     <div className="page-content fade-in">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, var(--accent), var(--purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>✨</div>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="var(--accent)" /></div>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>AI Financial Assistant</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Powered by Claude — your personal finance advisor</p>
@@ -142,8 +142,8 @@ export default function AIPage() {
             </div>
           )}
 
-          <div style={{ marginTop: 20, padding: '12px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            💡 <strong>Tip:</strong> Insights are generated based on your transaction history. The more you track, the smarter the advice!
+          <div style={{ marginTop: 20, padding: '12px', background: 'var(--bg-base)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            Insights are based on your transaction descriptions and categories. The more detail you add, the smarter the analysis.
           </div>
         </div>
       </div>

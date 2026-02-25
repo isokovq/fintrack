@@ -27,18 +27,17 @@ export default function LoginPage() {
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'var(--bg-base)',
-      backgroundImage: 'radial-gradient(ellipse at 20% 50%, rgba(79,143,255,0.06) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.06) 0%, transparent 60%)'
     }}>
       <div style={{ width: '100%', maxWidth: 400, padding: '0 20px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
-            width: 56, height: 56, margin: '0 auto 16px',
-            background: 'linear-gradient(135deg, var(--accent), var(--purple))',
-            borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 28, boxShadow: '0 8px 32px rgba(79,143,255,0.3)'
-          }}>💰</div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>FinTrack</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Smart personal finance management</p>
+            width: 48, height: 48, margin: '0 auto 16px',
+            background: 'var(--accent)', borderRadius: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, color: 'white', fontWeight: 800, letterSpacing: '-0.5px',
+          }}>F</div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 4 }}>FinTrack</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Personal finance, simplified</p>
         </div>
 
         <div className="card" style={{ padding: 28 }}>
@@ -77,7 +76,7 @@ export default function LoginPage() {
                 </select>
               </div>
             )}
-            <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 15, marginTop: 8 }}>
+            <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '11px', fontSize: 14, marginTop: 8 }}>
               {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>

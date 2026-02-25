@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -113,8 +113,8 @@ export default function CalendarPage() {
           </div>
           {dayTxData?.transactions?.length > 0 ? dayTxData.transactions.map(tx => (
             <div key={tx.id} className="tx-item">
-              <div className="tx-icon" style={{ background: tx.category_color ? `${tx.category_color}22` : 'var(--bg-elevated)', fontSize: 18 }}>
-                {tx.type === 'income' ? '💰' : '💸'}
+              <div className="tx-icon" style={{ background: tx.type === 'income' ? 'var(--green-bg)' : 'var(--red-bg)' }}>
+                {tx.type === 'income' ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
               </div>
               <div className="tx-info">
                 <div className="tx-desc">{tx.description || tx.category_name || 'Transaction'}</div>

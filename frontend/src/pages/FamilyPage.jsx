@@ -90,7 +90,7 @@ export default function FamilyPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 600 }}>
           {/* Family card */}
-          <div className="card" style={{ background: 'linear-gradient(135deg, rgba(79,143,255,0.1), rgba(167,139,250,0.1))', borderColor: 'rgba(79,143,255,0.3)' }}>
+          <div className="card" style={{ background: 'var(--accent-glow)', borderColor: 'var(--accent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ fontSize: 32 }}>👨‍👩‍👧‍👦</div>
@@ -116,7 +116,7 @@ export default function FamilyPage() {
             </div>
 
             {family.owner_id === user?.id && (
-              <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: '10px 14px' }}>
+              <div style={{ background: 'var(--bg-base)', borderRadius: 8, padding: '10px 14px' }}>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>Invite Code — share with family members</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ fontFamily: 'DM Mono', fontSize: 20, fontWeight: 800, letterSpacing: 4, color: 'var(--accent)' }}>{family.invite_code}</div>
@@ -133,7 +133,7 @@ export default function FamilyPage() {
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Members</h3>
             {family.members?.map(m => (
               <div key={m.id} className="tx-item">
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), var(--purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                   {m.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="tx-info">

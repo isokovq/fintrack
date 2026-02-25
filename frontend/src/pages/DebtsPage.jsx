@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate, daysUntil } from '../utils/format';
-import { Plus, X, Check, Trash2 } from 'lucide-react';
+import { Plus, X, Check, Trash2, ArrowUpRight, ArrowDownLeft, Handshake } from 'lucide-react';
 
 export default function DebtsPage() {
   const { user } = useAuth();
@@ -49,12 +49,12 @@ export default function DebtsPage() {
       </div>
 
       <div className="grid-2" style={{ marginBottom: 20 }}>
-        <div className="stat-card" style={{ borderColor: 'rgba(34,211,160,0.3)' }}>
+        <div className="stat-card" style={{ borderColor: 'rgba(5,150,105,0.2)' }}>
           <div className="stat-label">People Owe You</div>
           <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(totalLent, user?.currency)}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{lent.filter(d => d.status === 'OPEN').length} open debts</div>
         </div>
-        <div className="stat-card" style={{ borderColor: 'rgba(255,90,126,0.3)' }}>
+        <div className="stat-card" style={{ borderColor: 'rgba(220,38,38,0.2)' }}>
           <div className="stat-label">You Owe Others</div>
           <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(totalBorrowed, user?.currency)}</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{borrowed.filter(d => d.status === 'OPEN').length} open debts</div>
@@ -73,7 +73,7 @@ export default function DebtsPage() {
         return (
           <div key={dir} style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: dir === 'lent' ? 'var(--green)' : 'var(--red)' }}>
-              {dir === 'lent' ? '📤 Money You Lent' : '📥 Money You Borrowed'}
+              {dir === 'lent' ? 'Money You Lent' : 'Money You Borrowed'}
             </h3>
             {list.map(d => {
               const days = d.due_date ? daysUntil(d.due_date) : null;
@@ -82,7 +82,7 @@ export default function DebtsPage() {
                 <div key={d.id} className="debt-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: dir === 'lent' ? 'rgba(34,211,160,0.15)' : 'rgba(255,90,126,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: dir === 'lent' ? 'var(--green-bg)' : 'var(--red-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: dir === 'lent' ? 'var(--green)' : 'var(--red)' }}>
                         {d.contact_name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -108,7 +108,7 @@ export default function DebtsPage() {
                     <div style={{ color: 'var(--text-muted)' }}>
                       {d.due_date && (
                         <span style={{ color: days !== null && days < 0 ? 'var(--red)' : days !== null && days < 7 ? 'var(--yellow)' : 'var(--text-muted)' }}>
-                          {days !== null && days < 0 ? `⚠️ ${Math.abs(days)}d overdue` : days !== null ? `Due in ${days}d` : ''} ({formatDate(d.due_date)})
+                          {days !== null && days < 0 ? `${Math.abs(days)}d overdue` : days !== null ? `Due in ${days}d` : ''} ({formatDate(d.due_date)})
                         </span>
                       )}
                     </div>
@@ -133,7 +133,7 @@ export default function DebtsPage() {
       {debts.length === 0 && (
         <div className="card">
           <div className="empty-state">
-            <div className="empty-icon">🤝</div>
+            <div className="empty-icon"><Handshake size={32} color="var(--text-muted)" /></div>
             <p>No debts recorded yet</p>
             <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setShowModal(true)}>Add First Debt</button>
           </div>
@@ -151,8 +151,8 @@ export default function DebtsPage() {
               <div className="form-group">
                 <label className="form-label">Direction</label>
                 <div className="tabs">
-                  <button type="button" className={`tab-btn ${form.direction === 'lent' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'lent' }))}>📤 I Lent</button>
-                  <button type="button" className={`tab-btn ${form.direction === 'borrowed' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'borrowed' }))}>📥 I Borrowed</button>
+                  <button type="button" className={`tab-btn ${form.direction === 'lent' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'lent' }))}><ArrowUpRight size={13} /> I Lent</button>
+                  <button type="button" className={`tab-btn ${form.direction === 'borrowed' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'borrowed' }))}><ArrowDownLeft size={13} /> I Borrowed</button>
                 </div>
               </div>
               <div className="form-group">

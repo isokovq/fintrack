@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../utils/api';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 
 export default function TransactionModal({ onClose, editTx = null }) {
   const qc = useQueryClient();
@@ -70,7 +70,7 @@ export default function TransactionModal({ onClose, editTx = null }) {
               {['expense', 'income'].map(t => (
                 <button key={t} type="button" className={`tab-btn ${form.type === t ? 'active' : ''}`}
                   style={{ flex: 1, textTransform: 'capitalize' }} onClick={() => setForm(f => ({ ...f, type: t, category_id: '' }))}>
-                  {t === 'expense' ? '💸' : '💰'} {t}
+                  {t === 'expense' ? <TrendingDown size={13} /> : <TrendingUp size={13} />} {t}
                 </button>
               ))}
             </div>
