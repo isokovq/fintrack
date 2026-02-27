@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import TransactionModal from '../components/transactions/TransactionModal';
-import { Plus, Pencil, Trash2, Search, Filter, TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CreditCard } from 'lucide-react';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
@@ -36,7 +36,7 @@ export default function TransactionsPage() {
 
   const txs = data?.transactions || [];
   const filtered = filters.search
-    ? txs.filter(t => t.description?.toLowerCase().includes(filters.search.toLowerCase()) || t.category_name?.toLowerCase().includes(filters.search.toLowerCase()))
+    ? txs.filter(tx => tx.description?.toLowerCase().includes(filters.search.toLowerCase()) || tx.category_name?.toLowerCase().includes(filters.search.toLowerCase()))
     : txs;
 
   return (

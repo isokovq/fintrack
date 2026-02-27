@@ -530,7 +530,7 @@ select.form-control { cursor: pointer; }
   background: var(--bg-elevated);
   border-color: var(--accent);
 }
-.lang-toggle-desktop .lang-flag { font-size: 15px; line-height: 1; }
+.lang-toggle-desktop img { flex-shrink: 0; }
 
 /* Language dropdown */
 .lang-dropdown {

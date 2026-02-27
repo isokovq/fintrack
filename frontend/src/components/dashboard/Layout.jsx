@@ -11,10 +11,14 @@ import {
 } from 'lucide-react';
 
 const LANG_OPTIONS = [
-  { code: 'en', flag: '🇺🇸', label: 'Eng' },
-  { code: 'ru', flag: '🇷🇺', label: 'Ру' },
-  { code: 'uz', flag: '🇺🇿', label: "O'z" },
+  { code: 'en', cc: 'us', label: 'Eng' },
+  { code: 'ru', cc: 'ru', label: 'Ру' },
+  { code: 'uz', cc: 'uz', label: "O'z" },
 ];
+
+function Flag({ cc, size = 20 }) {
+  return <img src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${cc}.png`} alt={cc} style={{ width: size, height: Math.round(size * 0.75), borderRadius: 2, objectFit: 'cover', display: 'block' }} />;
+}
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -73,7 +77,7 @@ export default function Layout() {
           {/* Mobile language picker */}
           <div style={{ position: 'relative' }}>
             <button className="lang-toggle-mobile" onClick={() => setLangOpen(!langOpen)}>
-              <span>{currentLang.flag}</span>
+              <Flag cc={currentLang.cc} size={18} />
               <span>{currentLang.label}</span>
             </button>
             {langOpen && (
@@ -83,7 +87,7 @@ export default function Layout() {
                   {LANG_OPTIONS.map(opt => (
                     <button key={opt.code} className={`lang-option ${lang === opt.code ? 'active' : ''}`}
                       onClick={() => { setLang(opt.code); setLangOpen(false); }}>
-                      <span>{opt.flag}</span> {opt.label}
+                      <Flag cc={opt.cc} size={18} /> {opt.label}
                     </button>
                   ))}
                 </div>
@@ -143,7 +147,7 @@ export default function Layout() {
           <div />
           <div style={{ position: 'relative' }}>
             <button className="lang-toggle-desktop" onClick={() => setLangOpen(!langOpen)}>
-              <span className="lang-flag">{currentLang.flag}</span>
+              <Flag cc={currentLang.cc} size={20} />
               <span>{currentLang.label}</span>
               <ChevronLeft size={12} style={{ transform: langOpen ? 'rotate(90deg)' : 'rotate(-90deg)', transition: 'transform 0.15s' }} />
             </button>
@@ -154,7 +158,7 @@ export default function Layout() {
                   {LANG_OPTIONS.map(opt => (
                     <button key={opt.code} className={`lang-option ${lang === opt.code ? 'active' : ''}`}
                       onClick={() => { setLang(opt.code); setLangOpen(false); }}>
-                      <span>{opt.flag}</span> {opt.label}
+                      <Flag cc={opt.cc} size={18} /> {opt.label}
                     </button>
                   ))}
                 </div>
