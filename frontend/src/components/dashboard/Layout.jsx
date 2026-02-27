@@ -10,6 +10,36 @@ import {
   Menu, X, ChevronLeft, BarChart3
 } from 'lucide-react';
 
+const FLAG_SVG = {
+  us: (
+    <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+      <rect width="60" height="30" fill="#B22234"/>
+      <rect y="2.31" width="60" height="2.31" fill="#fff"/><rect y="6.92" width="60" height="2.31" fill="#fff"/>
+      <rect y="11.54" width="60" height="2.31" fill="#fff"/><rect y="16.15" width="60" height="2.31" fill="#fff"/>
+      <rect y="20.77" width="60" height="2.31" fill="#fff"/><rect y="25.38" width="60" height="2.31" fill="#fff"/>
+      <rect width="24" height="16.15" fill="#3C3B6E"/>
+      <g fill="#fff" fontSize="2.5" fontFamily="serif">
+        {[...Array(5)].map((_, r) => [...Array(6)].map((_, c) => <circle key={`a${r}${c}`} cx={2 + c * 4} cy={1.5 + r * 3.2} r="0.8"/>))}
+        {[...Array(4)].map((_, r) => [...Array(5)].map((_, c) => <circle key={`b${r}${c}`} cx={4 + c * 4} cy={3.1 + r * 3.2} r="0.8"/>))}
+      </g>
+    </svg>
+  ),
+  ru: (
+    <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+      <rect width="60" height="10" fill="#fff"/><rect y="10" width="60" height="10" fill="#0039A6"/><rect y="20" width="60" height="10" fill="#D52B1E"/>
+    </svg>
+  ),
+  uz: (
+    <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+      <rect width="60" height="10" fill="#1EB53A"/><rect y="10" width="60" height="2" fill="#CE1126"/>
+      <rect y="12" width="60" height="6" fill="#fff"/><rect y="18" width="60" height="2" fill="#CE1126"/>
+      <rect y="20" width="60" height="10" fill="#0099B5"/>
+      <circle cx="10" cy="5" r="3.5" fill="#fff"/><circle cx="11.5" cy="5" r="3" fill="#0099B5"/>
+      {[...Array(3)].map((_, r) => [...Array(4 - (r === 2 ? 1 : 0))].map((_, c) => <circle key={`s${r}${c}`} cx={17 + c * 2.5} cy={2.5 + r * 2.5} r="0.6" fill="#fff"/>))}
+    </svg>
+  ),
+};
+
 const LANG_OPTIONS = [
   { code: 'en', cc: 'us', label: 'Eng' },
   { code: 'ru', cc: 'ru', label: 'Ру' },
@@ -17,7 +47,7 @@ const LANG_OPTIONS = [
 ];
 
 function Flag({ cc, size = 20 }) {
-  return <img src={`https://flagcdn.com/w${size * 2}/${cc}.png`} alt={cc} style={{ width: size, height: Math.round(size * 0.75), borderRadius: 2, objectFit: 'cover', display: 'block', flexShrink: 0 }} />;
+  return <span style={{ width: size, height: Math.round(size * 0.75), display: 'inline-flex', flexShrink: 0, borderRadius: 2, overflow: 'hidden' }}>{FLAG_SVG[cc]}</span>;
 }
 
 export default function Layout() {
