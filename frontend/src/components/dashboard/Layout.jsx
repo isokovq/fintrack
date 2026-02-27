@@ -7,7 +7,7 @@ import api from '../../utils/api';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, PieChart,
   Users, Calendar, Sparkles, Bell, LogOut, HandCoins, Repeat2,
-  Menu, X, ChevronLeft
+  Menu, X, ChevronLeft, BarChart3
 } from 'lucide-react';
 
 const LANG_OPTIONS = [
@@ -32,6 +32,7 @@ export default function Layout() {
 
   useEffect(() => {
     setSidebarOpen(false);
+    setLangOpen(false);
   }, [location.pathname]);
 
   const navItems = [
@@ -68,15 +69,17 @@ export default function Layout() {
           </button>
         )}
         <span className="mobile-title">{pageTitle}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Mobile language picker */}
           <div style={{ position: 'relative' }}>
-            <button className="btn-icon mobile-menu-btn" onClick={() => setLangOpen(!langOpen)} style={{ fontSize: 14 }}>
-              {currentLang.flag}
+            <button className="lang-toggle-mobile" onClick={() => setLangOpen(!langOpen)}>
+              <span>{currentLang.flag}</span>
+              <span>{currentLang.label}</span>
             </button>
             {langOpen && (
               <>
                 <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setLangOpen(false)} />
-                <div className="lang-dropdown" style={{ right: 0 }}>
+                <div className="lang-dropdown" style={{ right: 0, top: '110%' }}>
                   {LANG_OPTIONS.map(opt => (
                     <button key={opt.code} className={`lang-option ${lang === opt.code ? 'active' : ''}`}
                       onClick={() => { setLang(opt.code); setLangOpen(false); }}>
@@ -98,21 +101,14 @@ export default function Layout() {
 
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <div className="logo-icon" style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.5px' }}>F</div>
+          <div className="logo-icon">
+            <BarChart3 size={18} color="white" />
+          </div>
           <span className="logo-text">FinTrack</span>
-          <button className="btn-icon sidebar-close" onClick={() => setSidebarOpen(false)}>
+          {/* X only shows on mobile via CSS */}
+          <button className="btn-icon sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
             <X size={18} />
           </button>
-        </div>
-
-        {/* Desktop language switcher */}
-        <div className="lang-switcher-desktop">
-          {LANG_OPTIONS.map(opt => (
-            <button key={opt.code} className={`lang-pill ${lang === opt.code ? 'active' : ''}`}
-              onClick={() => setLang(opt.code)}>
-              <span style={{ fontSize: 13 }}>{opt.flag}</span> {opt.label}
-            </button>
-          ))}
         </div>
 
         <nav className="sidebar-nav">
@@ -142,6 +138,19 @@ export default function Layout() {
       </aside>
 
       <main className="main-content">
+        {/* Desktop top bar with language switcher */}
+        <div className="topbar">
+          <div />
+          <div className="lang-switcher-top">
+            {LANG_OPTIONS.map(opt => (
+              <button key={opt.code} className={`lang-pill ${lang === opt.code ? 'active' : ''}`}
+                onClick={() => setLang(opt.code)}>
+                <span className="lang-flag">{opt.flag}</span>
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <Outlet />
       </main>
     </div>
