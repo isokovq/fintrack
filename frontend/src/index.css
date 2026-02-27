@@ -517,29 +517,22 @@ select.form-control { cursor: pointer; }
   max-width: 1200px;
 }
 
-.lang-switcher-top {
-  display: flex; gap: 4px;
-  background: var(--bg-surface);
+/* Desktop language toggle button */
+.lang-toggle-desktop {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 3px;
+  background: var(--bg-surface); color: var(--text-primary);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
 }
+.lang-toggle-desktop:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+}
+.lang-toggle-desktop .lang-flag { font-size: 15px; line-height: 1; }
 
-.lang-pill {
-  display: flex; align-items: center; gap: 5px;
-  padding: 5px 12px; border-radius: 6px; border: none;
-  background: transparent; color: var(--text-secondary);
-  font-size: 12.5px; font-weight: 500; cursor: pointer;
-  transition: all 0.12s; font-family: inherit;
-}
-.lang-pill .lang-flag { font-size: 14px; line-height: 1; }
-.lang-pill:hover { background: var(--bg-elevated); color: var(--text-primary); }
-.lang-pill.active {
-  background: var(--accent); color: white;
-  font-weight: 600;
-}
-
-/* Language dropdown (mobile) */
+/* Language dropdown */
 .lang-dropdown {
   position: absolute; top: 100%; margin-top: 4px;
   background: var(--bg-surface); border: 1px solid var(--border);

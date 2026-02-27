@@ -11,7 +11,7 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { t, locale } = useLanguage();
+  const { t, locale, lang } = useLanguage();
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['accounts'],
@@ -38,8 +38,8 @@ export default function DashboardPage() {
   });
 
   const { data: aiInsights = [] } = useQuery({
-    queryKey: ['ai-insights'],
-    queryFn: () => api.get('/ai/insights').then(r => r.data),
+    queryKey: ['ai-insights', lang],
+    queryFn: () => api.get('/ai/insights?lang=' + lang).then(r => r.data),
     staleTime: 300000,
     retry: 1
   });

@@ -138,17 +138,28 @@ export default function Layout() {
       </aside>
 
       <main className="main-content">
-        {/* Desktop top bar with language switcher */}
+        {/* Desktop top bar with language dropdown */}
         <div className="topbar">
           <div />
-          <div className="lang-switcher-top">
-            {LANG_OPTIONS.map(opt => (
-              <button key={opt.code} className={`lang-pill ${lang === opt.code ? 'active' : ''}`}
-                onClick={() => setLang(opt.code)}>
-                <span className="lang-flag">{opt.flag}</span>
-                <span>{opt.label}</span>
-              </button>
-            ))}
+          <div style={{ position: 'relative' }}>
+            <button className="lang-toggle-desktop" onClick={() => setLangOpen(!langOpen)}>
+              <span className="lang-flag">{currentLang.flag}</span>
+              <span>{currentLang.label}</span>
+              <ChevronLeft size={12} style={{ transform: langOpen ? 'rotate(90deg)' : 'rotate(-90deg)', transition: 'transform 0.15s' }} />
+            </button>
+            {langOpen && (
+              <>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setLangOpen(false)} />
+                <div className="lang-dropdown" style={{ right: 0, top: '110%' }}>
+                  {LANG_OPTIONS.map(opt => (
+                    <button key={opt.code} className={`lang-option ${lang === opt.code ? 'active' : ''}`}
+                      onClick={() => { setLang(opt.code); setLangOpen(false); }}>
+                      <span>{opt.flag}</span> {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
         <Outlet />

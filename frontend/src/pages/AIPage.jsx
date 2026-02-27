@@ -5,7 +5,7 @@ import api from '../utils/api';
 import { Send, Sparkles, RefreshCw } from 'lucide-react';
 
 export default function AIPage() {
-  const { t, locale: lang } = useLanguage();
+  const { t, lang } = useLanguage();
   const [messages, setMessages] = useState([
     { role: 'ai', content: t('ai.welcome') }
   ]);
@@ -14,7 +14,7 @@ export default function AIPage() {
   const bottomRef = useRef(null);
 
   const { data: insights = [], refetch: refetchInsights, isFetching: insightsFetching } = useQuery({
-    queryKey: ['ai-insights'],
+    queryKey: ['ai-insights', lang],
     queryFn: () => api.get('/ai/insights?lang=' + lang).then(r => r.data),
     staleTime: 300000
   });
