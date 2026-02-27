@@ -63,25 +63,25 @@ export default function TransfersPage() {
               </tr>
             </thead>
             <tbody>
-              {transfers.map(t => (
-                <tr key={t.id}>
+              {transfers.map(tr => (
+                <tr key={tr.id}>
                   <td>
-                    <span className="badge badge-red">{t.from_account_name}</span>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t.from_currency}</div>
+                    <span className="badge badge-red">{tr.from_account_name}</span>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr.from_currency}</div>
                   </td>
                   <td><ArrowRight size={16} color="var(--text-muted)" /></td>
                   <td>
-                    <span className="badge badge-green">{t.to_account_name}</span>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t.to_currency}</div>
+                    <span className="badge badge-green">{tr.to_account_name}</span>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr.to_currency}</div>
                   </td>
                   <td style={{ fontFamily: 'DM Mono', fontWeight: 600 }}>
-                    {formatCurrency(t.amount, t.from_currency, locale)}
-                    {t.exchange_rate !== 1 && t.exchange_rate !== '1' && (
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('transfers.exchange_rate')}: {t.exchange_rate}</div>
+                    {formatCurrency(tr.amount, tr.from_currency, locale)}
+                    {tr.exchange_rate !== 1 && tr.exchange_rate !== '1' && (
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('transfers.exchange_rate')}: {tr.exchange_rate}</div>
                     )}
                   </td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{formatDate(t.date, locale)}</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{t.description || '—'}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{formatDate(tr.date, locale)}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{tr.description || '—'}</td>
                 </tr>
               ))}
             </tbody>
