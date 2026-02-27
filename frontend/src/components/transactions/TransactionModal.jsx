@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 import { X, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 
 export default function TransactionModal({ onClose, editTx = null }) {
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [form, setForm] = useState({
     type: 'expense', amount: '', description: '', date: new Date().toISOString().split('T')[0],
@@ -59,18 +61,18 @@ export default function TransactionModal({ onClose, editTx = null }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div className="modal-header">
-          <h2>{editTx ? 'Edit' : 'Add'} Transaction</h2>
+          <h2>{editTx ? t('txm.edit_title') : t('txm.add_title')}</h2>
           <button className="btn-icon" onClick={onClose}><X size={16} /></button>
         </div>
 
         <form onSubmit={handle}>
           <div className="form-group">
-            <label className="form-label">Type</label>
+            <label className="form-label">{t('txm.type')}</label>
             <div className="tabs">
-              {['expense', 'income'].map(t => (
-                <button key={t} type="button" className={`tab-btn ${form.type === t ? 'active' : ''}`}
-                  style={{ flex: 1, textTransform: 'capitalize' }} onClick={() => setForm(f => ({ ...f, type: t, category_id: '' }))}>
-                  {t === 'expense' ? <TrendingDown size={13} /> : <TrendingUp size={13} />} {t}
+              {['expense', 'income'].map(type => (
+                <button key={type} type="button" className={`tab-btn ${form.type === type ? 'active' : ''}`}
+                  style={{ flex: 1, textTransform: 'capitalize' }} onClick={() => setForm(f => ({ ...f, type: type, category_id: '' }))}>
+                  {type === 'expense' ? <TrendingDown size={13} /> : <TrendingUp size={13} />} {type === 'expense' ? t('txm.expense') : t('txm.income')}
                 </button>
               ))}
             </div>
@@ -78,19 +80,19 @@ export default function TransactionModal({ onClose, editTx = null }) {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Amount</label>
+              <label className="form-label">{t('txm.amount')}</label>
               <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount} onChange={set('amount')} required />
             </div>
             <div className="form-group">
-              <label className="form-label">Date</label>
+              <label className="form-label">{t('txm.date')}</label>
               <input className="form-control" type="date" value={form.date} onChange={set('date')} required />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Description</label>
+            <label className="form-label">{t('txm.description')}</label>
             <div style={{ display: 'flex', gap: 8 }}>
-              <input className="form-control" placeholder="What was this for?" value={form.description} onChange={set('description')} />
+              <input className="form-control" placeholder={t('txm.desc_placeholder')} value={form.description} onChange={set('description')} />
               <button type="button" className="btn btn-ghost btn-sm" onClick={suggestCategory} disabled={aiLoading} title="AI suggest category" style={{ flexShrink: 0, gap: 4 }}>
                 <Sparkles size={13} style={{ color: 'var(--purple)' }} />
                 {aiLoading ? '...' : 'AI'}
@@ -100,16 +102,16 @@ export default function TransactionModal({ onClose, editTx = null }) {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Account</label>
+              <label className="form-label">{t('txm.account')}</label>
               <select className="form-control" value={form.account_id} onChange={set('account_id')} required>
-                <option value="">Select account</option>
+                <option value="">{t('txm.select_account')}</option>
                 {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Category</label>
+              <label className="form-label">{t('txm.category')}</label>
               <select className="form-control" value={form.category_id} onChange={set('category_id')}>
-                <option value="">Select category</option>
+                <option value="">{t('txm.select_category')}</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
@@ -117,25 +119,25 @@ export default function TransactionModal({ onClose, editTx = null }) {
 
           <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <input type="checkbox" id="recurring" checked={form.is_recurring} onChange={e => setForm(f => ({ ...f, is_recurring: e.target.checked }))} />
-            <label htmlFor="recurring" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>Recurring transaction</label>
+            <label htmlFor="recurring" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>{t('txm.recurring')}</label>
           </div>
 
           {form.is_recurring && (
             <div className="form-group">
-              <label className="form-label">Interval</label>
+              <label className="form-label">{t('txm.interval')}</label>
               <select className="form-control" value={form.recurring_interval} onChange={set('recurring_interval')}>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
+                <option value="daily">{t('txm.daily')}</option>
+                <option value="weekly">{t('txm.weekly')}</option>
+                <option value="monthly">{t('txm.monthly')}</option>
+                <option value="yearly">{t('txm.yearly')}</option>
               </select>
             </div>
           )}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button type="button" className="btn btn-ghost" onClick={onClose} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
+            <button type="button" className="btn btn-ghost" onClick={onClose} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
             <button type="submit" className="btn btn-primary" disabled={mutation.isPending} style={{ flex: 2, justifyContent: 'center' }}>
-              {mutation.isPending ? 'Saving...' : editTx ? 'Save Changes' : `Add ${form.type === 'income' ? 'Income' : 'Expense'}`}
+              {mutation.isPending ? t('txm.saving') : editTx ? t('common.save') : `${t('txm.add_title')} ${form.type === 'income' ? t('txm.add_income') : t('txm.add_expense')}`}
             </button>
           </div>
         </form>

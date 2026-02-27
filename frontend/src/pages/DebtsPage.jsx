@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate, daysUntil } from '../utils/format';
 import { Plus, X, Check, Trash2, ArrowUpRight, ArrowDownLeft, Handshake } from 'lucide-react';
 
 export default function DebtsPage() {
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const qc = useQueryClient();
   const [filter, setFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -42,27 +44,27 @@ export default function DebtsPage() {
     <div className="page-content fade-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700 }}>Debts & Loans</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Track money you lent or borrowed</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('debts.title')}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('debts.subtitle')}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}><Plus size={15} /> Add Debt</button>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}><Plus size={15} /> {t('debts.add')}</button>
       </div>
 
       <div className="grid-2" style={{ marginBottom: 20 }}>
         <div className="stat-card" style={{ borderColor: 'rgba(5,150,105,0.2)' }}>
-          <div className="stat-label">People Owe You</div>
-          <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(totalLent, user?.currency)}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{lent.filter(d => d.status === 'OPEN').length} open debts</div>
+          <div className="stat-label">{t('debts.owe_you')}</div>
+          <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(totalLent, user?.currency, locale)}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{lent.filter(d => d.status === 'OPEN').length} {t('debts.open_debts')}</div>
         </div>
         <div className="stat-card" style={{ borderColor: 'rgba(220,38,38,0.2)' }}>
-          <div className="stat-label">You Owe Others</div>
-          <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(totalBorrowed, user?.currency)}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{borrowed.filter(d => d.status === 'OPEN').length} open debts</div>
+          <div className="stat-label">{t('debts.you_owe')}</div>
+          <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(totalBorrowed, user?.currency, locale)}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{borrowed.filter(d => d.status === 'OPEN').length} {t('debts.open_debts')}</div>
         </div>
       </div>
 
       <div className="tabs" style={{ marginBottom: 16, width: 'fit-content' }}>
-        {[['', 'All'], ['OPEN', 'Open'], ['CLOSED', 'Closed']].map(([v, l]) => (
+        {[['', t('common.all')], ['OPEN', t('common.open')], ['CLOSED', t('common.closed')]].map(([v, l]) => (
           <button key={v} className={`tab-btn ${filter === v ? 'active' : ''}`} onClick={() => setFilter(v)}>{l}</button>
         ))}
       </div>
@@ -73,7 +75,7 @@ export default function DebtsPage() {
         return (
           <div key={dir} style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: dir === 'lent' ? 'var(--green)' : 'var(--red)' }}>
-              {dir === 'lent' ? 'Money You Lent' : 'Money You Borrowed'}
+              {dir === 'lent' ? t('debts.lent') : t('debts.borrowed')}
             </h3>
             {list.map(d => {
               const days = d.due_date ? daysUntil(d.due_date) : null;
@@ -87,14 +89,14 @@ export default function DebtsPage() {
                       </div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{d.contact_name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{d.description || 'No description'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{d.description || t('debts.no_desc')}</div>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontFamily: 'DM Mono', fontWeight: 700, fontSize: 15, color: dir === 'lent' ? 'var(--green)' : 'var(--red)' }}>
-                        {formatCurrency(d.remaining_amount, user?.currency)}
+                        {formatCurrency(d.remaining_amount, user?.currency, locale)}
                       </div>
-                      <span className={`badge ${d.status === 'CLOSED' ? 'badge-green' : 'badge-yellow'}`}>{d.status}</span>
+                      <span className={`badge ${d.status === 'CLOSED' ? 'badge-green' : 'badge-yellow'}`}>{d.status === 'CLOSED' ? t('common.closed') : t('common.open')}</span>
                     </div>
                   </div>
 
@@ -108,17 +110,17 @@ export default function DebtsPage() {
                     <div style={{ color: 'var(--text-muted)' }}>
                       {d.due_date && (
                         <span style={{ color: days !== null && days < 0 ? 'var(--red)' : days !== null && days < 7 ? 'var(--yellow)' : 'var(--text-muted)' }}>
-                          {days !== null && days < 0 ? `${Math.abs(days)}d overdue` : days !== null ? `Due in ${days}d` : ''} ({formatDate(d.due_date)})
+                          {days !== null && days < 0 ? `${Math.abs(days)}${t('debts.days')} ${t('debts.overdue')}` : days !== null ? `${t('debts.due_in')} ${days}${t('debts.days')}` : ''} ({formatDate(d.due_date, locale)})
                         </span>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
                       {d.status === 'OPEN' && (
                         <button className="btn btn-ghost btn-sm" onClick={() => { setPayModal(d); setPayAmount(d.remaining_amount); }}>
-                          <Check size={12} /> Mark Paid
+                          <Check size={12} /> {t('debts.mark_paid')}
                         </button>
                       )}
-                      <button className="btn-icon" style={{ color: 'var(--red)' }} onClick={() => window.confirm('Delete this debt?') && deleteMutation.mutate(d.id)}>
+                      <button className="btn-icon" style={{ color: 'var(--red)' }} onClick={() => window.confirm(t('debts.delete_confirm')) && deleteMutation.mutate(d.id)}>
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -134,8 +136,8 @@ export default function DebtsPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Handshake size={32} color="var(--text-muted)" /></div>
-            <p>No debts recorded yet</p>
-            <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setShowModal(true)}>Add First Debt</button>
+            <p>{t('debts.no_debts')}</p>
+            <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setShowModal(true)}>{t('debts.add_first')}</button>
           </div>
         </div>
       )}
@@ -144,38 +146,38 @@ export default function DebtsPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div className="modal">
             <div className="modal-header">
-              <h2>Add Debt / Loan</h2>
+              <h2>{t('debts.add_title')}</h2>
               <button className="btn-icon" onClick={() => setShowModal(false)}><X size={16} /></button>
             </div>
             <form onSubmit={e => { e.preventDefault(); addMutation.mutate({ ...form, amount: parseFloat(form.amount) }); }}>
               <div className="form-group">
-                <label className="form-label">Direction</label>
+                <label className="form-label">{t('debts.direction')}</label>
                 <div className="tabs">
-                  <button type="button" className={`tab-btn ${form.direction === 'lent' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'lent' }))}><ArrowUpRight size={13} /> I Lent</button>
-                  <button type="button" className={`tab-btn ${form.direction === 'borrowed' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'borrowed' }))}><ArrowDownLeft size={13} /> I Borrowed</button>
+                  <button type="button" className={`tab-btn ${form.direction === 'lent' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'lent' }))}><ArrowUpRight size={13} /> {t('debts.i_lent')}</button>
+                  <button type="button" className={`tab-btn ${form.direction === 'borrowed' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setForm(f => ({ ...f, direction: 'borrowed' }))}><ArrowDownLeft size={13} /> {t('debts.i_borrowed')}</button>
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">{form.direction === 'lent' ? 'Borrower Name' : 'Lender Name'}</label>
-                <input className="form-control" placeholder="Contact name" value={form.contact_name} onChange={set('contact_name')} required />
+                <label className="form-label">{form.direction === 'lent' ? t('debts.borrower') : t('debts.lender')}</label>
+                <input className="form-control" placeholder={t('debts.contact_placeholder')} value={form.contact_name} onChange={set('contact_name')} required />
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Amount</label>
+                  <label className="form-label">{t('debts.amount')}</label>
                   <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount} onChange={set('amount')} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Due Date</label>
+                  <label className="form-label">{t('debts.due_date')}</label>
                   <input className="form-control" type="date" value={form.due_date} onChange={set('due_date')} />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Description</label>
-                <input className="form-control" placeholder="What for?" value={form.description} onChange={set('description')} />
+                <label className="form-label">{t('debts.description')}</label>
+                <input className="form-control" placeholder={t('debts.what_for')} value={form.description} onChange={set('description')} />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 2, justifyContent: 'center' }}>Add Debt</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 2, justifyContent: 'center' }}>{t('debts.add')}</button>
               </div>
             </form>
           </div>
@@ -186,20 +188,20 @@ export default function DebtsPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setPayModal(null)}>
           <div className="modal" style={{ maxWidth: 360 }}>
             <div className="modal-header">
-              <h2>Record Payment</h2>
+              <h2>{t('debts.record_payment')}</h2>
               <button className="btn-icon" onClick={() => setPayModal(null)}><X size={16} /></button>
             </div>
             <div style={{ marginBottom: 16, color: 'var(--text-secondary)', fontSize: 13 }}>
-              Remaining: <strong style={{ color: 'var(--text-primary)', fontFamily: 'DM Mono' }}>{formatCurrency(payModal.remaining_amount, user?.currency)}</strong>
+              {t('debts.remaining')}: <strong style={{ color: 'var(--text-primary)', fontFamily: 'DM Mono' }}>{formatCurrency(payModal.remaining_amount, user?.currency, locale)}</strong>
             </div>
             <div className="form-group">
-              <label className="form-label">Payment Amount</label>
+              <label className="form-label">{t('debts.payment_amount')}</label>
               <input className="form-control" type="number" step="0.01" min="0" value={payAmount} onChange={e => setPayAmount(e.target.value)} />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-ghost" onClick={() => setPayModal(null)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
+              <button className="btn btn-ghost" onClick={() => setPayModal(null)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
               <button className="btn btn-success" onClick={() => payMutation.mutate({ id: payModal.id, amount: parseFloat(payAmount) })} style={{ flex: 2, justifyContent: 'center' }}>
-                <Check size={14} /> Record Payment
+                <Check size={14} /> {t('debts.record_payment')}
               </button>
             </div>
           </div>

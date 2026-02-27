@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
 import { Plus, X, Trash2, Target, TrendingUp, Utensils, Car, ShoppingBag, Tv, Heart, Home, BookOpen, Zap, Plane, Tag, BarChart3, ShoppingCart, Dumbbell } from 'lucide-react';
@@ -13,6 +14,7 @@ const ICON_MAP = {
 
 export default function BudgetPage() {
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const qc = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -59,12 +61,12 @@ export default function BudgetPage() {
     <div className="page-content fade-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700 }}>Budget Planning</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Track and manage your spending limits</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('budget.title')}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('budget.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-ghost" onClick={() => setShowIncomeModal(true)}><Target size={14} /> Income Target</button>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}><Plus size={15} /> Add Budget</button>
+          <button className="btn btn-ghost" onClick={() => setShowIncomeModal(true)}><Target size={14} /> {t('budget.income_target')}</button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}><Plus size={15} /> {t('budget.add')}</button>
         </div>
       </div>
 
@@ -85,9 +87,9 @@ export default function BudgetPage() {
         <div className="card" style={{ marginBottom: 20, background: 'var(--green-bg)', borderColor: 'rgba(5,150,105,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>Income Target</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>{t('budget.income_target')}</div>
               <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'DM Mono', color: 'var(--green)' }}>
-                {formatCurrency(incomeBudget.actual_income, user?.currency)} <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>/ {formatCurrency(incomeBudget.target_amount, user?.currency)}</span>
+                {formatCurrency(incomeBudget.actual_income, user?.currency, locale)} <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>/ {formatCurrency(incomeBudget.target_amount, user?.currency, locale)}</span>
               </div>
             </div>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(5,150,105,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -104,13 +106,13 @@ export default function BudgetPage() {
       {budgets.length > 0 && (
         <div className="grid-2" style={{ marginBottom: 20 }}>
           <div className="stat-card">
-            <div className="stat-label">Total Budget Limit</div>
-            <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalLimit, user?.currency)}</div>
+            <div className="stat-label">{t('budget.total_limit')}</div>
+            <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalLimit, user?.currency, locale)}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-label">Total Spent</div>
+            <div className="stat-label">{t('budget.total_spent')}</div>
             <div className="stat-value" style={{ color: totalSpent > totalLimit ? 'var(--red)' : 'var(--green)' }}>
-              {formatCurrency(totalSpent, user?.currency)}
+              {formatCurrency(totalSpent, user?.currency, locale)}
               <span style={{ fontSize: 13, fontFamily: 'sans-serif', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 8 }}>
                 ({totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0}%)
               </span>
@@ -124,9 +126,9 @@ export default function BudgetPage() {
         {budgets.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon"><BarChart3 size={32} color="var(--text-muted)" /></div>
-            <p>No budgets set for this month</p>
+            <p>{t('budget.no_budgets')}</p>
             <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setShowModal(true)}>
-              <Plus size={14} /> Set Budget Limits
+              <Plus size={14} /> {t('budget.set_limits')}
             </button>
           </div>
         ) : budgets.map(b => {
@@ -143,15 +145,15 @@ export default function BudgetPage() {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{b.category_name}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                      {formatCurrency(b.spent_amount, user?.currency)} of {formatCurrency(b.limit_amount, user?.currency)}
+                      {formatCurrency(b.spent_amount, user?.currency, locale)} of {formatCurrency(b.limit_amount, user?.currency, locale)}
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className={`badge ${over ? 'badge-red' : warn ? 'badge-yellow' : 'badge-green'}`}>
-                    {over ? 'Over limit' : `${Math.round(pct)}%`}
+                    {over ? t('budget.over_limit') : `${Math.round(pct)}%`}
                   </span>
-                  <button className="btn-icon" style={{ color: 'var(--red)' }} onClick={() => window.confirm('Remove budget?') && deleteBudget.mutate(b.id)}>
+                  <button className="btn-icon" style={{ color: 'var(--red)' }} onClick={() => window.confirm(t('budget.remove_confirm')) && deleteBudget.mutate(b.id)}>
                     <Trash2 size={12} />
                   </button>
                 </div>
@@ -164,7 +166,7 @@ export default function BudgetPage() {
               </div>
               {over && (
                 <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>
-                  Over by {formatCurrency(parseFloat(b.spent_amount) - parseFloat(b.limit_amount), user?.currency)}
+                  {t('budget.over_by')} {formatCurrency(parseFloat(b.spent_amount) - parseFloat(b.limit_amount), user?.currency, locale)}
                 </div>
               )}
             </div>
@@ -177,24 +179,24 @@ export default function BudgetPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div className="modal">
             <div className="modal-header">
-              <h2>Set Budget Limit</h2>
+              <h2>{t('budget.set_limit_title')}</h2>
               <button className="btn-icon" onClick={() => setShowModal(false)}><X size={16} /></button>
             </div>
             <form onSubmit={e => { e.preventDefault(); addBudget.mutate({ category_id: form.category_id, month, year, limit_amount: parseFloat(form.limit_amount) }); }}>
               <div className="form-group">
-                <label className="form-label">Category</label>
+                <label className="form-label">{t('budget.category')}</label>
                 <select className="form-control" value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} required>
                   <option value="">Select category</option>
                   {categories.filter(c => !budgets.find(b => b.category_id === c.id)).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Monthly Limit</label>
+                <label className="form-label">{t('budget.monthly_limit')}</label>
                 <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={form.limit_amount} onChange={e => setForm(f => ({ ...f, limit_amount: e.target.value }))} required />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 2, justifyContent: 'center' }}>Set Limit</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 2, justifyContent: 'center' }}>{t('budget.set_limit')}</button>
               </div>
             </form>
           </div>
@@ -206,17 +208,17 @@ export default function BudgetPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowIncomeModal(false)}>
           <div className="modal">
             <div className="modal-header">
-              <h2>Set Income Target</h2>
+              <h2>{t('budget.set_income_title')}</h2>
               <button className="btn-icon" onClick={() => setShowIncomeModal(false)}><X size={16} /></button>
             </div>
             <form onSubmit={e => { e.preventDefault(); addIncomeBudget.mutate({ month, year, target_amount: parseFloat(incomeTarget) }); }}>
               <div className="form-group">
-                <label className="form-label">Monthly Income Target</label>
+                <label className="form-label">{t('budget.monthly_income')}</label>
                 <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={incomeTarget} onChange={e => setIncomeTarget(e.target.value)} required />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setShowIncomeModal(false)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
-                <button type="submit" className="btn btn-success" style={{ flex: 2, justifyContent: 'center' }}>Set Target</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowIncomeModal(false)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
+                <button type="submit" className="btn btn-success" style={{ flex: 2, justifyContent: 'center' }}>{t('budget.set_target')}</button>
               </div>
             </form>
           </div>

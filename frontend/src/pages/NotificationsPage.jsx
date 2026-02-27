@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { Bell, Check, CheckCheck, AlertTriangle, Info, AlertCircle } from 'lucide-react';
 
@@ -9,6 +10,7 @@ const TYPE_CONFIG = {
 };
 
 export default function NotificationsPage() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -39,14 +41,14 @@ export default function NotificationsPage() {
     <div className="page-content fade-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Notifications</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{t('notif.title')}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-            {unread > 0 ? `${unread} unread notification${unread !== 1 ? 's' : ''}` : 'All caught up!'}
+            {unread > 0 ? `${unread} ${unread !== 1 ? t('notif.unread_plural') : t('notif.unread')}` : t('notif.caught_up')}
           </p>
         </div>
         {unread > 0 && (
           <button className="btn btn-ghost" onClick={() => markAllRead.mutate()}>
-            <CheckCheck size={14} /> Mark all read
+            <CheckCheck size={14} /> {t('notif.mark_all')}
           </button>
         )}
       </div>
@@ -103,9 +105,9 @@ export default function NotificationsPage() {
         <div className="card">
           <div className="empty-state">
             <div className="empty-icon"><Bell size={32} color="var(--text-muted)" /></div>
-            <p>No notifications yet</p>
+            <p>{t('notif.empty')}</p>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
-              You'll receive alerts about budgets, debts, and monthly summaries here.
+              {t('notif.info')}
             </p>
           </div>
         </div>

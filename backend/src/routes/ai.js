@@ -5,7 +5,8 @@ const aiService = require('../services/ai');
 // Get AI spending insights
 router.get('/insights', auth, async (req, res) => {
   try {
-    const insights = await aiService.analyzeSpending(req.user.id);
+    const lang = req.query.lang || 'en';
+    const insights = await aiService.analyzeSpending(req.user.id, lang);
     res.json(insights);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -15,9 +16,9 @@ router.get('/insights', auth, async (req, res) => {
 // AI Chat
 router.post('/chat', auth, async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
+    const { message, history = [], lang = 'en' } = req.body;
     if (!message) return res.status(400).json({ error: 'Message required' });
-    const response = await aiService.chat(req.user.id, message, history);
+    const response = await aiService.chat(req.user.id, message, history, lang);
     res.json({ response });
   } catch (err) {
     res.status(500).json({ error: 'AI service unavailable' });

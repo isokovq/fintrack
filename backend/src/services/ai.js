@@ -3,6 +3,8 @@ const db = require('../db');
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+const LANG_NAMES = { en: 'English', ru: 'Russian', uz: 'Uzbek' };
+
 // Suggest expense category based on description
 async function suggestCategory(description, type, userId) {
   try {
@@ -33,13 +35,12 @@ Return ONLY the UUID of the most appropriate category. Nothing else, just the UU
 }
 
 // Analyze spending habits and generate insights (category + description-based)
-async function analyzeSpending(userId) {
+async function analyzeSpending(userId, lang = 'en') {
   try {
-    // Get user's currency
     const userRow = await db.query('SELECT currency FROM users WHERE id=$1', [userId]);
     const currency = userRow.rows[0]?.currency || 'USD';
+    const langName = LANG_NAMES[lang] || 'English';
 
-    // Category-level summary
     const categoryStats = await db.query(
       `SELECT c.name as category, SUM(t.amount) as total, COUNT(*) as count
        FROM transactions t
@@ -49,7 +50,6 @@ async function analyzeSpending(userId) {
       [userId]
     );
 
-    // Detailed transaction descriptions for deeper analysis
     const recentDescriptions = await db.query(
       `SELECT t.description, t.amount, t.date::text, c.name as category
        FROM transactions t
@@ -60,7 +60,6 @@ async function analyzeSpending(userId) {
       [userId]
     );
 
-    // Month-over-month comparison
     const monthComparison = await db.query(
       `SELECT
          TO_CHAR(date, 'YYYY-MM') as month,
@@ -80,6 +79,8 @@ async function analyzeSpending(userId) {
         role: 'user',
         content: `You are a sharp personal finance advisor. Analyze this user's spending data in detail and provide 4-5 actionable insights.
 
+CRITICAL: You MUST respond entirely in ${langName}. All titles and messages must be in ${langName}.
+
 CRITICAL: The user's currency is ${currency}. ALL amounts in the data are in ${currency}. You MUST use ${currency} when referring to any amounts. NEVER use $ or USD unless the user's currency is actually USD. For example, if the currency is UZS, say "50,000 UZS" not "$50,000".
 
 IMPORTANT: Go beyond just category totals. Look at the individual transaction DESCRIPTIONS to find specific patterns, recurring merchants, habits, and potential savings. Be specific — mention actual items/places when you see patterns.
@@ -90,7 +91,7 @@ Recent transaction details: ${JSON.stringify(recentDescriptions.rows)}
 
 Monthly totals: ${JSON.stringify(monthComparison.rows)}
 
-Return a JSON array of insights, each with: { "type": "warning|tip|info|saving", "title": "short title", "message": "specific actionable insight referencing actual spending patterns using ${currency} for all amounts", "emoji": "single emoji" }
+Return a JSON array of insights, each with: { "type": "warning|tip|info|saving", "title": "short title in ${langName}", "message": "specific actionable insight in ${langName} referencing actual spending patterns using ${currency} for all amounts", "emoji": "single emoji" }
 Return ONLY valid JSON, no markdown or explanation.`
       }]
     });
@@ -110,10 +111,11 @@ Return ONLY valid JSON, no markdown or explanation.`
 }
 
 // AI chat for financial advice
-async function chat(userId, userMessage, history = []) {
+async function chat(userId, userMessage, history = [], lang = 'en') {
   try {
     const userRow = await db.query('SELECT currency FROM users WHERE id=$1', [userId]);
     const currency = userRow.rows[0]?.currency || 'USD';
+    const langName = LANG_NAMES[lang] || 'English';
 
     const userStats = await db.query(
       `SELECT
@@ -124,6 +126,7 @@ async function chat(userId, userMessage, history = []) {
     );
 
     const systemPrompt = `You are FinTrack AI, a smart and friendly personal finance assistant.
+CRITICAL: You MUST respond entirely in ${langName}. Every word of your response must be in ${langName}.
 IMPORTANT: The user's currency is ${currency}. ALWAYS use ${currency} when referring to amounts. NEVER use $ or USD unless the currency is actually USD.
 
 Current user financial snapshot:
@@ -131,7 +134,7 @@ Current user financial snapshot:
 - Monthly expenses: ${userStats.rows[0].monthly_expense || 0} ${currency}
 - Total balance: ${userStats.rows[0].total_balance || 0} ${currency}
 
-Give concise, actionable financial advice. Keep responses under 200 words. Always use ${currency} for all monetary amounts.`;
+Give concise, actionable financial advice in ${langName}. Keep responses under 200 words. Always use ${currency} for all monetary amounts.`;
 
     const messages = [...history, { role: 'user', content: userMessage }];
 

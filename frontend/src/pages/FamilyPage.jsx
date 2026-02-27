@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
 import { Users, Plus, LogOut, Copy, Check } from 'lucide-react';
 
 export default function FamilyPage() {
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const qc = useQueryClient();
   const [mode, setMode] = useState(null);
   const [familyName, setFamilyName] = useState('');
@@ -44,32 +46,32 @@ export default function FamilyPage() {
   return (
     <div className="page-content fade-in">
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700 }}>Family Sharing</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Share finances with your family members</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('family.title')}</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('family.subtitle')}</p>
       </div>
 
       {!family ? (
         <div className="card" style={{ maxWidth: 500, textAlign: 'center', padding: 40 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>👨‍👩‍👧‍👦</div>
-          <h2 style={{ marginBottom: 8 }}>Create or Join a Family</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 24 }}>Share your financial overview with family members and track combined spending.</p>
+          <h2 style={{ marginBottom: 8 }}>{t('family.create_join')}</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 24 }}>{t('family.share_desc')}</p>
 
           {!mode && (
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              <button className="btn btn-primary" onClick={() => setMode('create')}><Plus size={14} /> Create Family</button>
-              <button className="btn btn-ghost" onClick={() => setMode('join')}><Users size={14} /> Join Family</button>
+              <button className="btn btn-primary" onClick={() => setMode('create')}><Plus size={14} /> {t('family.create')}</button>
+              <button className="btn btn-ghost" onClick={() => setMode('join')}><Users size={14} /> {t('family.join')}</button>
             </div>
           )}
 
           {mode === 'create' && (
             <div style={{ marginTop: 20, textAlign: 'left' }}>
               <div className="form-group">
-                <label className="form-label">Family Name</label>
-                <input className="form-control" placeholder="The Smiths" value={familyName} onChange={e => setFamilyName(e.target.value)} />
+                <label className="form-label">{t('family.name')}</label>
+                <input className="form-control" placeholder={t('family.name_placeholder')} value={familyName} onChange={e => setFamilyName(e.target.value)} />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-ghost" onClick={() => setMode(null)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
-                <button className="btn btn-primary" onClick={() => createMutation.mutate(familyName)} style={{ flex: 2, justifyContent: 'center' }}>Create</button>
+                <button className="btn btn-ghost" onClick={() => setMode(null)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
+                <button className="btn btn-primary" onClick={() => createMutation.mutate(familyName)} style={{ flex: 2, justifyContent: 'center' }}>{t('family.create')}</button>
               </div>
             </div>
           )}
@@ -77,12 +79,12 @@ export default function FamilyPage() {
           {mode === 'join' && (
             <div style={{ marginTop: 20, textAlign: 'left' }}>
               <div className="form-group">
-                <label className="form-label">Invite Code</label>
-                <input className="form-control" placeholder="Enter 8-character code" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} maxLength={8} />
+                <label className="form-label">{t('family.invite_code')}</label>
+                <input className="form-control" placeholder={t('family.code_placeholder')} value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} maxLength={8} />
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-ghost" onClick={() => setMode(null)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
-                <button className="btn btn-primary" onClick={() => joinMutation.mutate(inviteCode)} style={{ flex: 2, justifyContent: 'center' }}>Join</button>
+                <button className="btn btn-ghost" onClick={() => setMode(null)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
+                <button className="btn btn-primary" onClick={() => joinMutation.mutate(inviteCode)} style={{ flex: 2, justifyContent: 'center' }}>{t('family.join')}</button>
               </div>
             </div>
           )}
@@ -96,32 +98,32 @@ export default function FamilyPage() {
                 <div style={{ fontSize: 32 }}>👨‍👩‍👧‍👦</div>
                 <div>
                   <h2 style={{ fontSize: 20, fontWeight: 800 }}>{family.name}</h2>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{family.members?.length} member{family.members?.length !== 1 ? 's' : ''}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{family.members?.length} {family.members?.length !== 1 ? t('family.members') : t('family.member')}</div>
                 </div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => window.confirm('Leave family?') && leaveMutation.mutate()} style={{ color: 'var(--red)' }}>
-                <LogOut size={13} /> Leave
+              <button className="btn btn-ghost btn-sm" onClick={() => window.confirm(t('family.leave_confirm')) && leaveMutation.mutate()} style={{ color: 'var(--red)' }}>
+                <LogOut size={13} /> {t('family.leave')}
               </button>
             </div>
 
             <div style={{ display: 'flex', gap: 20, marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 2 }}>This Month Income</div>
-                <div style={{ fontFamily: 'DM Mono', fontWeight: 700, color: 'var(--green)', fontSize: 18 }}>{formatCurrency(family.stats?.total_income || 0, user?.currency)}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 2 }}>{t('family.this_month_income')}</div>
+                <div style={{ fontFamily: 'DM Mono', fontWeight: 700, color: 'var(--green)', fontSize: 18 }}>{formatCurrency(family.stats?.total_income || 0, user?.currency, locale)}</div>
               </div>
               <div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 2 }}>This Month Expenses</div>
-                <div style={{ fontFamily: 'DM Mono', fontWeight: 700, color: 'var(--red)', fontSize: 18 }}>{formatCurrency(family.stats?.total_expense || 0, user?.currency)}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 2 }}>{t('family.this_month_expense')}</div>
+                <div style={{ fontFamily: 'DM Mono', fontWeight: 700, color: 'var(--red)', fontSize: 18 }}>{formatCurrency(family.stats?.total_expense || 0, user?.currency, locale)}</div>
               </div>
             </div>
 
             {family.owner_id === user?.id && (
               <div style={{ background: 'var(--bg-base)', borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>Invite Code — share with family members</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>{t('family.invite_label')}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ fontFamily: 'DM Mono', fontSize: 20, fontWeight: 800, letterSpacing: 4, color: 'var(--accent)' }}>{family.invite_code}</div>
                   <button className="btn btn-ghost btn-sm" onClick={copyCode}>
-                    {copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
+                    {copied ? <><Check size={12} /> {t('common.copied')}</> : <><Copy size={12} /> {t('common.copy')}</>}
                   </button>
                 </div>
               </div>
@@ -130,17 +132,17 @@ export default function FamilyPage() {
 
           {/* Members list */}
           <div className="card">
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Members</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>{t('family.members_title')}</h3>
             {family.members?.map(m => (
               <div key={m.id} className="tx-item">
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                   {m.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="tx-info">
-                  <div className="tx-desc">{m.name} {m.id === user?.id && <span style={{ fontSize: 11, color: 'var(--accent)' }}>(you)</span>}</div>
+                  <div className="tx-desc">{m.name} {m.id === user?.id && <span style={{ fontSize: 11, color: 'var(--accent)' }}>({t('family.you')})</span>}</div>
                   <div className="tx-meta">{m.email}</div>
                 </div>
-                {m.id === family.owner_id && <span className="badge badge-purple">Owner</span>}
+                {m.id === family.owner_id && <span className="badge badge-purple">{t('family.owner')}</span>}
               </div>
             ))}
           </div>

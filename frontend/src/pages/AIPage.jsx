@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { Send, Sparkles, RefreshCw } from 'lucide-react';
 
 export default function AIPage() {
+  const { t, locale: lang } = useLanguage();
   const [messages, setMessages] = useState([
-    { role: 'ai', content: "Hi! I'm your FinTrack AI assistant 👋 I can help you analyze your spending, give financial advice, and answer questions about your finances. What would you like to know?" }
+    { role: 'ai', content: t('ai.welcome') }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,7 +15,7 @@ export default function AIPage() {
 
   const { data: insights = [], refetch: refetchInsights, isFetching: insightsFetching } = useQuery({
     queryKey: ['ai-insights'],
-    queryFn: () => api.get('/ai/insights').then(r => r.data),
+    queryFn: () => api.get('/ai/insights?lang=' + lang).then(r => r.data),
     staleTime: 300000
   });
 
@@ -32,19 +34,19 @@ export default function AIPage() {
         content: m.content
       }));
 
-      const res = await api.post('/ai/chat', { message: userMsg, history });
+      const res = await api.post('/ai/chat', { message: userMsg, history, lang });
       setMessages(m => [...m, { role: 'ai', content: res.data.response }]);
     } catch (e) {
-      setMessages(m => [...m, { role: 'ai', content: "Sorry, I'm having trouble connecting. Please try again." }]);
+      setMessages(m => [...m, { role: 'ai', content: t('ai.error') }]);
     }
     setLoading(false);
   };
 
   const quickPrompts = [
-    "How can I reduce my expenses?",
-    "What's my spending pattern?",
-    "How much should I save?",
-    "Which category am I overspending on?"
+    t('ai.prompt1'),
+    t('ai.prompt2'),
+    t('ai.prompt3'),
+    t('ai.prompt4')
   ];
 
   return (
@@ -52,8 +54,8 @@ export default function AIPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="var(--accent)" /></div>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700 }}>AI Financial Assistant</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Powered by Claude — your personal finance advisor</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('ai.title')}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('ai.subtitle')}</p>
         </div>
       </div>
 
@@ -62,7 +64,7 @@ export default function AIPage() {
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Sparkles size={15} color="var(--purple)" />
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Chat with AI</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{t('ai.chat_title')}</span>
           </div>
 
           <div className="chat-messages" style={{ padding: 16 }}>
@@ -100,7 +102,7 @@ export default function AIPage() {
           <div className="chat-input-area">
             <input
               className="form-control"
-              placeholder="Ask about your finances..."
+              placeholder={t('ai.placeholder')}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
@@ -114,8 +116,8 @@ export default function AIPage() {
         {/* Insights */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700 }}>📊 AI Spending Insights</h3>
-            <button className="btn-icon" onClick={() => refetchInsights()} disabled={insightsFetching} title="Refresh insights">
+            <h3 style={{ fontSize: 15, fontWeight: 700 }}>📊 {t('ai.insights_title')}</h3>
+            <button className="btn-icon" onClick={() => refetchInsights()} disabled={insightsFetching} title={t('ai.refresh')}>
               <RefreshCw size={13} style={{ animation: insightsFetching ? 'spin 0.8s linear infinite' : 'none' }} />
             </button>
           </div>
@@ -123,7 +125,7 @@ export default function AIPage() {
           {insightsFetching ? (
             <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>
               <div className="loader" style={{ margin: '0 auto 12px', width: 28, height: 28 }} />
-              <div>Analyzing your finances...</div>
+              <div>{t('ai.analyzing')}</div>
             </div>
           ) : insights.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -137,13 +139,13 @@ export default function AIPage() {
           ) : (
             <div className="empty-state">
               <div className="empty-icon">🤖</div>
-              <p>Add more transactions for AI to analyze your spending patterns</p>
-              <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={() => refetchInsights()}>Generate Insights</button>
+              <p>{t('ai.no_data')}</p>
+              <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={() => refetchInsights()}>{t('ai.generate')}</button>
             </div>
           )}
 
           <div style={{ marginTop: 20, padding: '12px', background: 'var(--bg-base)', borderRadius: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Insights are based on your transaction descriptions and categories. The more detail you add, the smarter the analysis.
+            {t('ai.info')}
           </div>
         </div>
       </div>

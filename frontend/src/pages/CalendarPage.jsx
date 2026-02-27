@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function CalendarPage() {
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const [date, setDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
 
@@ -31,7 +33,7 @@ export default function CalendarPage() {
   const daysInMonth = new Date(year, month, 0).getDate();
   const today = new Date().toISOString().split('T')[0];
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = [t('cal.sun'), t('cal.mon'), t('cal.tue'), t('cal.wed'), t('cal.thu'), t('cal.fri'), t('cal.sat')];
   const monthName = date.toLocaleString('en', { month: 'long', year: 'numeric' });
 
   const prev = () => setDate(d => new Date(d.getFullYear(), d.getMonth() - 1));
@@ -44,12 +46,12 @@ export default function CalendarPage() {
     <div className="page-content fade-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700 }}>Calendar View</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Daily transaction overview</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('cal.title')}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('cal.subtitle')}</p>
         </div>
         <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
-          <span style={{ color: 'var(--green)', fontFamily: 'DM Mono', fontWeight: 600 }}>+{formatCurrency(monthIncome, user?.currency)}</span>
-          <span style={{ color: 'var(--red)', fontFamily: 'DM Mono', fontWeight: 600 }}>-{formatCurrency(monthExpense, user?.currency)}</span>
+          <span style={{ color: 'var(--green)', fontFamily: 'DM Mono', fontWeight: 600 }}>+{formatCurrency(monthIncome, user?.currency, locale)}</span>
+          <span style={{ color: 'var(--red)', fontFamily: 'DM Mono', fontWeight: 600 }}>-{formatCurrency(monthExpense, user?.currency, locale)}</span>
         </div>
       </div>
 
@@ -106,8 +108,8 @@ export default function CalendarPage() {
             </h3>
             {calMap[selectedDay] && (
               <div style={{ fontSize: 13, display: 'flex', gap: 12 }}>
-                <span style={{ color: 'var(--green)' }}>+{formatCurrency(calMap[selectedDay].income, user?.currency)}</span>
-                <span style={{ color: 'var(--red)' }}>-{formatCurrency(calMap[selectedDay].expense, user?.currency)}</span>
+                <span style={{ color: 'var(--green)' }}>+{formatCurrency(calMap[selectedDay].income, user?.currency, locale)}</span>
+                <span style={{ color: 'var(--red)' }}>-{formatCurrency(calMap[selectedDay].expense, user?.currency, locale)}</span>
               </div>
             )}
           </div>
@@ -121,12 +123,12 @@ export default function CalendarPage() {
                 <div className="tx-meta">{tx.category_name} • {tx.account_name}</div>
               </div>
               <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
-                {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency)}
+                {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency, locale)}
               </div>
             </div>
           )) : (
             <div className="empty-state" style={{ padding: 24 }}>
-              <p>No transactions on this day</p>
+              <p>{t('cal.no_tx')}</p>
             </div>
           )}
         </div>

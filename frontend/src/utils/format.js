@@ -1,21 +1,29 @@
-export function formatCurrency(amount, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount, currency = 'USD', locale = 'en-US') {
+  let formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
+    minimumFractionDigits: currency === 'UZS' ? 0 : 2,
+    maximumFractionDigits: currency === 'UZS' ? 0 : 2,
   }).format(amount || 0);
+
+  // Fix: Intl formats UZS as "som" but correct Uzbek name is "sum" (soʻm)
+  formatted = formatted.replace(/som/gi, 'sum');
+  formatted = formatted.replace(/сўм/gi, 'сум');
+  formatted = formatted.replace(/soʻm/gi, "so'm");
+
+  return formatted;
 }
 
-export function formatDate(date) {
-  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+export function formatDate(date, locale = 'en-US') {
+  return new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function formatShortDate(date) {
-  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+export function formatShortDate(date, locale = 'en-US') {
+  return new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }
 
-export function getMonthName(month) {
-  return new Date(2024, month - 1).toLocaleString('en-US', { month: 'long' });
+export function getMonthName(month, locale = 'en-US') {
+  return new Date(2024, month - 1).toLocaleString(locale, { month: 'long' });
 }
 
 export function daysUntil(date) {

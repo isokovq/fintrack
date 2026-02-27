@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatShortDate } from '../utils/format';
 import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard } from 'lucide-react';
@@ -10,6 +11,7 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['accounts'],
@@ -55,7 +57,7 @@ export default function DashboardPage() {
   }));
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = hour < 12 ? t('dash.greeting_morning') : hour < 17 ? t('dash.greeting_afternoon') : t('dash.greeting_evening');
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
@@ -64,7 +66,7 @@ export default function DashboardPage() {
         <div style={{ color: 'var(--text-secondary)', marginBottom: 4, fontWeight: 600 }}>{label}</div>
         {payload.map(p => (
           <div key={p.name} style={{ color: p.color, fontFamily: 'DM Mono', fontWeight: 600, marginBottom: 1 }}>
-            {p.name}: {formatCurrency(p.value, user?.currency)}
+            {p.name}: {formatCurrency(p.value, user?.currency, locale)}
           </div>
         ))}
       </div>
@@ -83,52 +85,52 @@ export default function DashboardPage() {
           </p>
         </div>
         <Link to="/transactions" className="btn btn-primary">
-          <Plus size={15} /> Add Transaction
+          <Plus size={15} /> {t('dash.add_tx')}
         </Link>
       </div>
 
       <div className="grid-4" style={{ marginBottom: 24 }}>
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">Total Balance</div>
+            <div className="stat-label">{t('dash.total_balance')}</div>
             <div className="stat-icon" style={{ background: 'var(--accent-glow)' }}><Wallet size={16} color="var(--accent)" /></div>
           </div>
-          <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, user?.currency)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{accounts.length} account{accounts.length !== 1 ? 's' : ''}</div>
+          <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, user?.currency, locale)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{accounts.length} {accounts.length !== 1 ? t('dash.accounts_count_plural') : t('dash.accounts_count')}</div>
         </div>
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">Monthly Income</div>
+            <div className="stat-label">{t('dash.monthly_income')}</div>
             <div className="stat-icon" style={{ background: 'var(--green-bg)' }}><TrendingUp size={16} color="var(--green)" /></div>
           </div>
-          <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(income, user?.currency)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.income_count || 0} transactions</div>
+          <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(income, user?.currency, locale)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.income_count || 0} {t('dash.transactions_count')}</div>
         </div>
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">Monthly Expenses</div>
+            <div className="stat-label">{t('dash.monthly_expenses')}</div>
             <div className="stat-icon" style={{ background: 'var(--red-bg)' }}><TrendingDown size={16} color="var(--red)" /></div>
           </div>
-          <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(expense, user?.currency)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.expense_count || 0} transactions</div>
+          <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(expense, user?.currency, locale)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.expense_count || 0} {t('dash.transactions_count')}</div>
         </div>
         <div className="stat-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">Net Savings</div>
+            <div className="stat-label">{t('dash.net_savings')}</div>
             <div className="stat-icon" style={{ background: saved >= 0 ? 'var(--green-bg)' : 'var(--red-bg)' }}>
               {saved >= 0 ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
             </div>
           </div>
-          <div className="stat-value" style={{ color: saved >= 0 ? 'var(--green)' : 'var(--red)' }}>{formatCurrency(Math.abs(saved), user?.currency)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{income > 0 ? `${savingsRate}% savings rate` : 'No income yet'}</div>
+          <div className="stat-value" style={{ color: saved >= 0 ? 'var(--green)' : 'var(--red)' }}>{formatCurrency(Math.abs(saved), user?.currency, locale)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{income > 0 ? `${savingsRate}% ${t('dash.savings_rate')}` : t('dash.no_income')}</div>
         </div>
       </div>
 
       <div className="grid-2" style={{ marginBottom: 24 }}>
         <div className="card">
           <div className="card-header">
-            <h3 style={{ fontSize: 14, fontWeight: 700 }}>Income vs Expenses</h3>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Last 12 months</span>
+            <h3 style={{ fontSize: 14, fontWeight: 700 }}>{t('dash.income_vs_expense')}</h3>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('dash.last_12')}</span>
           </div>
           {trendFormatted.length > 0 ? (
             <ResponsiveContainer width="100%" height={210}>
@@ -147,13 +149,13 @@ export default function DashboardPage() {
                 <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="income" stroke="#059669" strokeWidth={2} fill="url(#incGrad)" name="Income" dot={false} />
-                <Area type="monotone" dataKey="expense" stroke="#dc2626" strokeWidth={2} fill="url(#expGrad)" name="Expense" dot={false} />
+                <Area type="monotone" dataKey="income" stroke="#059669" strokeWidth={2} fill="url(#incGrad)" name={t('dash.income')} dot={false} />
+                <Area type="monotone" dataKey="expense" stroke="#dc2626" strokeWidth={2} fill="url(#expGrad)" name={t('dash.expense')} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
             <div className="empty-state" style={{ padding: 50 }}>
-              <p>Add transactions to see trends</p>
+              <p>{t('dash.add_tx_trends')}</p>
             </div>
           )}
         </div>
@@ -161,9 +163,9 @@ export default function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <h3 style={{ fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Sparkles size={14} color="var(--purple)" /> AI Insights
+              <Sparkles size={14} color="var(--purple)" /> {t('dash.ai_insights')}
             </h3>
-            <Link to="/ai" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>View all</Link>
+            <Link to="/ai" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>{t('dash.view_all')}</Link>
           </div>
           {aiInsights.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -176,8 +178,8 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="empty-state">
-              <p>Add more transactions for AI insights</p>
-              <Link to="/ai" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}>Chat with AI</Link>
+              <p>{t('dash.more_tx_insights')}</p>
+              <Link to="/ai" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}>{t('dash.chat_ai')}</Link>
             </div>
           )}
         </div>
@@ -186,9 +188,9 @@ export default function DashboardPage() {
       <div className="grid-2">
         <div className="card">
           <div className="card-header">
-            <h3 style={{ fontSize: 14, fontWeight: 700 }}>Recent Transactions</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700 }}>{t('dash.recent_tx')}</h3>
             <Link to="/transactions" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              View all <ArrowRight size={12} />
+              {t('dash.view_all')} <ArrowRight size={12} />
             </Link>
           </div>
           {txData?.transactions?.length > 0 ? txData.transactions.map(tx => (
@@ -197,18 +199,18 @@ export default function DashboardPage() {
                 {tx.type === 'income' ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
               </div>
               <div className="tx-info">
-                <div className="tx-desc">{tx.description || tx.category_name || 'Transaction'}</div>
-                <div className="tx-meta">{tx.category_name || 'Uncategorized'} · {formatShortDate(tx.date)}</div>
+                <div className="tx-desc">{tx.description || tx.category_name || t('dash.view_all')}</div>
+                <div className="tx-meta">{tx.category_name || t('common.all')} · {formatShortDate(tx.date, locale)}</div>
               </div>
               <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
-                {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency)}
+                {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency, locale)}
               </div>
             </div>
           )) : (
             <div className="empty-state">
-              <p>No transactions yet</p>
+              <p>{t('dash.no_tx')}</p>
               <Link to="/transactions" className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
-                <Plus size={13} /> Add First Transaction
+                <Plus size={13} /> {t('dash.add_first_tx')}
               </Link>
             </div>
           )}
@@ -216,9 +218,9 @@ export default function DashboardPage() {
 
         <div className="card">
           <div className="card-header">
-            <h3 style={{ fontSize: 14, fontWeight: 700 }}>Your Accounts</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 700 }}>{t('dash.your_accounts')}</h3>
             <Link to="/accounts" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              Manage <ArrowRight size={12} />
+              {t('dash.manage')} <ArrowRight size={12} />
             </Link>
           </div>
           {accounts.length > 0 ? accounts.slice(0, 5).map(acc => (
@@ -231,14 +233,14 @@ export default function DashboardPage() {
                 <div className="tx-meta" style={{ textTransform: 'capitalize' }}>{acc.type} · {acc.currency}</div>
               </div>
               <div className="tx-amount" style={{ color: parseFloat(acc.balance) >= 0 ? 'var(--text-primary)' : 'var(--red)' }}>
-                {formatCurrency(acc.balance, acc.currency)}
+                {formatCurrency(acc.balance, acc.currency, locale)}
               </div>
             </div>
           )) : (
             <div className="empty-state">
-              <p>No accounts added yet</p>
+              <p>{t('dash.no_accounts')}</p>
               <Link to="/accounts" className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
-                <Plus size={13} /> Add Account
+                <Plus size={13} /> {t('dash.add_account')}
               </Link>
             </div>
           )}

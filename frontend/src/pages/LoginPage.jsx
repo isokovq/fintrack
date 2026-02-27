@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function LoginPage() {
   const { login, register } = useAuth();
+  const { t } = useLanguage();
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ name: '', email: '', password: '', currency: 'USD' });
   const [error, setError] = useState('');
@@ -37,13 +39,13 @@ export default function LoginPage() {
             fontSize: 20, color: 'white', fontWeight: 800, letterSpacing: '-0.5px',
           }}>F</div>
           <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 4 }}>FinTrack</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Personal finance, simplified</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('auth.tagline')}</p>
         </div>
 
         <div className="card" style={{ padding: 28 }}>
           <div className="tabs" style={{ marginBottom: 24 }}>
-            <button className={`tab-btn ${mode === 'login' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('login')}>Sign In</button>
-            <button className={`tab-btn ${mode === 'register' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('register')}>Create Account</button>
+            <button className={`tab-btn ${mode === 'login' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('login')}>{t('auth.signin')}</button>
+            <button className={`tab-btn ${mode === 'register' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('register')}>{t('auth.create')}</button>
           </div>
 
           {error && <div className="alert alert-danger" style={{ marginBottom: 16 }}>{error}</div>}
@@ -51,33 +53,33 @@ export default function LoginPage() {
           <form onSubmit={handle}>
             {mode === 'register' && (
               <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input className="form-control" placeholder="John Doe" value={form.name} onChange={set('name')} required />
+                <label className="form-label">{t('auth.name')}</label>
+                <input className="form-control" placeholder={t('auth.name_placeholder')} value={form.name} onChange={set('name')} required />
               </div>
             )}
             <div className="form-group">
-              <label className="form-label">Email</label>
-              <input className="form-control" type="email" placeholder="john@example.com" value={form.email} onChange={set('email')} required />
+              <label className="form-label">{t('auth.email')}</label>
+              <input className="form-control" type="email" placeholder={t('auth.email_placeholder')} value={form.email} onChange={set('email')} required />
             </div>
             <div className="form-group">
-              <label className="form-label">Password</label>
-              <input className="form-control" type="password" placeholder="••••••••" value={form.password} onChange={set('password')} required />
+              <label className="form-label">{t('auth.password')}</label>
+              <input className="form-control" type="password" placeholder={t('auth.password_placeholder')} value={form.password} onChange={set('password')} required />
             </div>
             {mode === 'register' && (
               <div className="form-group">
-                <label className="form-label">Currency</label>
+                <label className="form-label">{t('auth.currency')}</label>
                 <select className="form-control" value={form.currency} onChange={set('currency')}>
-                  <option value="USD">USD — US Dollar</option>
-                  <option value="EUR">EUR — Euro</option>
-                  <option value="GBP">GBP — British Pound</option>
-                  <option value="UZS">UZS — Uzbekistani Som</option>
-                  <option value="RUB">RUB — Russian Ruble</option>
-                  <option value="JPY">JPY — Japanese Yen</option>
+                  <option value="USD">{t('auth.currency_usd')}</option>
+                  <option value="EUR">{t('auth.currency_eur')}</option>
+                  <option value="GBP">{t('auth.currency_gbp')}</option>
+                  <option value="UZS">{t('auth.currency_uzs')}</option>
+                  <option value="RUB">{t('auth.currency_rub')}</option>
+                  <option value="JPY">{t('auth.currency_jpy')}</option>
                 </select>
               </div>
             )}
             <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '11px', fontSize: 14, marginTop: 8 }}>
-              {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+              {loading ? t('common.loading') : mode === 'login' ? t('auth.signin') : t('auth.create')}
             </button>
           </form>
         </div>
