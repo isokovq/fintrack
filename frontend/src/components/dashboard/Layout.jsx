@@ -17,7 +17,7 @@ const LANG_OPTIONS = [
 ];
 
 function Flag({ cc, size = 20 }) {
-  return <img src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${cc}.png`} alt={cc} style={{ width: size, height: Math.round(size * 0.75), borderRadius: 2, objectFit: 'cover', display: 'block' }} />;
+  return <img src={`https://flagcdn.com/w${size * 2}/${cc}.png`} alt={cc} style={{ width: size, height: Math.round(size * 0.75), borderRadius: 2, objectFit: 'cover', display: 'block', flexShrink: 0 }} />;
 }
 
 export default function Layout() {
