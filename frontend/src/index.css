@@ -31,6 +31,58 @@
   --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
 }
 
+/* ======== DARK THEME ======== */
+[data-theme="dark"] {
+  --bg-base: #0f1117;
+  --bg-surface: #1a1d27;
+  --bg-elevated: #242733;
+  --bg-card: #1a1d27;
+  --bg-hover: #2a2d3a;
+  --border: #2e3140;
+  --border-light: #3a3d4e;
+  --accent: #4f8fff;
+  --accent-dim: #3d7ae8;
+  --accent-glow: rgba(79, 143, 255, 0.08);
+  --accent-light: rgba(79, 143, 255, 0.12);
+  --green: #34d399;
+  --green-dim: #10b981;
+  --green-bg: rgba(52, 211, 153, 0.08);
+  --red: #f87171;
+  --red-dim: #ef4444;
+  --red-bg: rgba(248, 113, 113, 0.08);
+  --yellow: #fbbf24;
+  --yellow-bg: rgba(251, 191, 36, 0.08);
+  --purple: #a78bfa;
+  --text-primary: #f1f3f7;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, #2e3140 37%, var(--bg-elevated) 63%);
+  background-size: 800px 100%;
+}
+
+[data-theme="dark"] .alert-info { color: #93c5fd; }
+[data-theme="dark"] .alert-warning { color: #fcd34d; }
+[data-theme="dark"] .alert-danger { color: #fca5a5; }
+[data-theme="dark"] .alert-success { color: #6ee7b7; }
+
+[data-theme="dark"] .chat-message.user .chat-bubble { background: var(--accent); }
+[data-theme="dark"] .chat-message.ai .chat-bubble { background: var(--bg-elevated); }
+
+[data-theme="dark"] .tab-btn.active {
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .onboarding-card {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -515,6 +567,20 @@ select.form-control { cursor: pointer; }
   display: flex; align-items: center; justify-content: flex-end;
   padding: 12px 32px 0;
   max-width: 1200px;
+}
+
+/* Theme toggle */
+.theme-toggle {
+  width: 34px; height: 34px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-surface); color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.theme-toggle:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--accent);
 }
 
 /* Desktop language toggle button */

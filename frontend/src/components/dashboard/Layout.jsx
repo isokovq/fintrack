@@ -4,10 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../utils/api';
+import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, PieChart,
   Users, Calendar, Sparkles, Bell, LogOut, HandCoins, Repeat2,
-  Menu, X, ChevronLeft, BarChart3
+  Menu, X, ChevronLeft, BarChart3, Sun, Moon
 } from 'lucide-react';
 
 const FLAG_SVG = {
@@ -53,6 +54,7 @@ function Flag({ cc, size = 20 }) {
 export default function Layout() {
   const { user, logout } = useAuth();
   const { t, lang, setLang } = useLanguage();
+  const { isDark, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -104,6 +106,10 @@ export default function Layout() {
         )}
         <span className="mobile-title">{pageTitle}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Mobile theme toggle */}
+          <button className="btn-icon mobile-menu-btn" onClick={toggleTheme} style={{ marginRight: -4 }}>
+            {isDark ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
           {/* Mobile language picker */}
           <div style={{ position: 'relative' }}>
             <button className="lang-toggle-mobile" onClick={() => setLangOpen(!langOpen)}>
@@ -175,6 +181,10 @@ export default function Layout() {
         {/* Desktop top bar with language dropdown */}
         <div className="topbar">
           <div />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button className="theme-toggle" onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}>
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
           <div style={{ position: 'relative' }}>
             <button className="lang-toggle-desktop" onClick={() => setLangOpen(!langOpen)}>
               <Flag cc={currentLang.cc} size={20} />
@@ -194,6 +204,7 @@ export default function Layout() {
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
         <Outlet />
