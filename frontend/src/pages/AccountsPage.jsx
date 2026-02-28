@@ -45,7 +45,7 @@ export default function AccountsPage() {
   const totalBalance = accounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0);
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>{t('acc.title')}</h1>

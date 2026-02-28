@@ -58,7 +58,7 @@ export default function BudgetPage() {
   const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: new Date(2024, i).toLocaleString('en', { month: 'long' }) }));
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition stagger-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('budget.title')}</h1>
@@ -158,7 +158,7 @@ export default function BudgetPage() {
                   </button>
                 </div>
               </div>
-              <div className="progress-bar">
+              <div className="progress-bar progress-bar-animated">
                 <div className="progress-fill" style={{
                   width: `${pct}%`,
                   background: over ? 'var(--red)' : warn ? 'var(--yellow)' : 'var(--green)'

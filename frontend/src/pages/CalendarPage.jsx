@@ -43,7 +43,7 @@ export default function CalendarPage() {
   const monthExpense = calData.reduce((s, d) => s + parseFloat(d.expense || 0), 0);
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('cal.title')}</h1>

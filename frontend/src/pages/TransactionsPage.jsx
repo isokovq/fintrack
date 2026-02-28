@@ -5,7 +5,9 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import TransactionModal from '../components/transactions/TransactionModal';
-import { Plus, Pencil, Trash2, Search, CreditCard } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
+import { SkeletonTableRow } from '../components/ui/Skeleton';
+import SwipeRow from '../components/ui/SwipeRow';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
@@ -15,6 +17,7 @@ export default function TransactionsPage() {
   const [editTx, setEditTx] = useState(null);
   const [filters, setFilters] = useState({ type: '', search: '' });
   const [page, setPage] = useState(0);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   const { data, isLoading } = useQuery({
     queryKey: ['transactions', filters, page],
@@ -39,8 +42,40 @@ export default function TransactionsPage() {
     ? txs.filter(tx => tx.description?.toLowerCase().includes(filters.search.toLowerCase()) || tx.category_name?.toLowerCase().includes(filters.search.toLowerCase()))
     : txs;
 
+  const renderMobileRow = (tx) => {
+    const row = (
+      <div className="tx-item" style={{ padding: '12px 16px' }}>
+        <div className="tx-icon" style={{ background: tx.type === 'income' ? 'var(--green-bg)' : 'var(--red-bg)' }}>
+          {tx.type === 'income' ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
+        </div>
+        <div className="tx-info">
+          <div className="tx-desc">{tx.description || '—'}</div>
+          <div className="tx-meta">
+            {tx.category_name || '—'} · {formatDate(tx.date, locale)}
+            {tx.ai_suggested_category && <span style={{ color: 'var(--purple)', marginLeft: 4 }}>AI</span>}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
+            {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency, locale)}
+          </div>
+          <button className="btn-icon" style={{ border: 'none', width: 24, height: 24, marginTop: 2 }}
+            onClick={() => { setEditTx(tx); setShowModal(true); }}>
+            <Pencil size={11} />
+          </button>
+        </div>
+      </div>
+    );
+
+    return (
+      <SwipeRow key={tx.id} onDelete={() => deleteMutation.mutate(tx.id)} confirmText={t('tx.delete_confirm')}>
+        {row}
+      </SwipeRow>
+    );
+  };
+
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('tx.title')}</h1>
@@ -70,9 +105,23 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card" style={isMobile ? { padding: 0 } : {}}>
         {isLoading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
+          isMobile ? (
+            <div style={{ padding: 16 }}>{[1,2,3,4,5].map(i => (
+              <div key={i} className="tx-item"><div className="skeleton" style={{ width: 38, height: 38, borderRadius: 8 }} /><div style={{ flex: 1 }}><div className="skeleton" style={{ width: '70%', height: 14, marginBottom: 6, borderRadius: 4 }} /><div className="skeleton" style={{ width: '40%', height: 10, borderRadius: 4 }} /></div><div className="skeleton" style={{ width: 80, height: 16, borderRadius: 4 }} /></div>
+            ))}</div>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>{t('tx.description')}</th><th>{t('tx.category')}</th><th>{t('tx.account')}</th>
+                  <th>{t('tx.date')}</th><th style={{ textAlign: 'right' }}>{t('tx.amount')}</th><th style={{ textAlign: 'right' }}>{t('tx.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>{[1,2,3,4,5].map(i => <SkeletonTableRow key={i} cols={6} />)}</tbody>
+            </table>
+          )
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon"><CreditCard size={32} color="var(--text-muted)" /></div>
@@ -81,7 +130,11 @@ export default function TransactionsPage() {
               <Plus size={14} /> {t('tx.add_first')}
             </button>
           </div>
+        ) : isMobile ? (
+          /* Mobile: swipeable card rows */
+          <div>{filtered.map(tx => renderMobileRow(tx))}</div>
         ) : (
+          /* Desktop: table view */
           <table className="table">
             <thead>
               <tr>

@@ -44,7 +44,7 @@ export default function FamilyPage() {
   if (isLoading) return <div className="page-content"><div className="empty-state">Loading...</div></div>;
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('family.title')}</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('family.subtitle')}</p>

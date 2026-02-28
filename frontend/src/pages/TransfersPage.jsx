@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import { Plus, X, ArrowRight, ArrowLeftRight } from 'lucide-react';
+import CurrencyConverter from '../components/ui/CurrencyConverter';
 
 export default function TransfersPage() {
   const { user } = useAuth();
@@ -33,7 +34,7 @@ export default function TransfersPage() {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition stagger-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('transfers.title')}</h1>
@@ -44,49 +45,52 @@ export default function TransfersPage() {
         </button>
       </div>
 
-      <div className="card">
-        {transfers.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon"><ArrowLeftRight size={32} color="var(--text-muted)" /></div>
-            <p>{t('transfers.no_transfers')}</p>
-          </div>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>{t('transfers.from')}</th>
-                <th></th>
-                <th>{t('transfers.to')}</th>
-                <th>{t('transfers.amount')}</th>
-                <th>{t('transfers.date')}</th>
-                <th>{t('transfers.description')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transfers.map(tr => (
-                <tr key={tr.id}>
-                  <td>
-                    <span className="badge badge-red">{tr.from_account_name}</span>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr.from_currency}</div>
-                  </td>
-                  <td><ArrowRight size={16} color="var(--text-muted)" /></td>
-                  <td>
-                    <span className="badge badge-green">{tr.to_account_name}</span>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr.to_currency}</div>
-                  </td>
-                  <td style={{ fontFamily: 'DM Mono', fontWeight: 600 }}>
-                    {formatCurrency(tr.amount, tr.from_currency, locale)}
-                    {tr.exchange_rate !== 1 && tr.exchange_rate !== '1' && (
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('transfers.exchange_rate')}: {tr.exchange_rate}</div>
-                    )}
-                  </td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{formatDate(tr.date, locale)}</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{tr.description || '—'}</td>
+      <div className="grid-2" style={{ marginBottom: 24, alignItems: 'start' }}>
+        <div className="card">
+          {transfers.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon"><ArrowLeftRight size={32} color="var(--text-muted)" /></div>
+              <p>{t('transfers.no_transfers')}</p>
+            </div>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>{t('transfers.from')}</th>
+                  <th></th>
+                  <th>{t('transfers.to')}</th>
+                  <th>{t('transfers.amount')}</th>
+                  <th>{t('transfers.date')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody>
+                {transfers.map(tr => (
+                  <tr key={tr.id}>
+                    <td>
+                      <span className="badge badge-red">{tr.from_account_name}</span>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr.from_currency}</div>
+                    </td>
+                    <td><ArrowRight size={16} color="var(--text-muted)" /></td>
+                    <td>
+                      <span className="badge badge-green">{tr.to_account_name}</span>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tr.to_currency}</div>
+                    </td>
+                    <td style={{ fontFamily: 'DM Mono', fontWeight: 600 }}>
+                      {formatCurrency(tr.amount, tr.from_currency, locale)}
+                      {tr.exchange_rate !== 1 && tr.exchange_rate !== '1' && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('transfers.exchange_rate')}: {tr.exchange_rate}</div>
+                      )}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{formatDate(tr.date, locale)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Currency Converter Widget */}
+        <CurrencyConverter />
       </div>
 
       {showModal && (

@@ -50,7 +50,7 @@ export default function AIPage() {
   ];
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={18} color="var(--accent)" /></div>
         <div>

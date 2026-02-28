@@ -1,25 +1,39 @@
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatShortDate } from '../utils/format';
-import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard, ArrowLeftRight, PieChart, HandCoins, Repeat2 } from 'lucide-react';
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  PieChart as RPieChart, Pie, Cell
 } from 'recharts';
+import { SkeletonStatCard, SkeletonCard, SkeletonTxItem } from '../components/ui/Skeleton';
+import Onboarding from '../components/ui/Onboarding';
+
+const DONUT_COLORS = ['#1a56db', '#059669', '#dc2626', '#d97706', '#7c3aed', '#06b6d4', '#ec4899', '#f97316'];
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t, locale, lang } = useLanguage();
+  const navigate = useNavigate();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const { data: accounts = [] } = useQuery({
+  useEffect(() => {
+    if (!localStorage.getItem('onboarding_done')) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
     queryKey: ['accounts'],
     queryFn: () => api.get('/accounts').then(r => r.data),
     retry: 1
   });
 
-  const { data: statsData } = useQuery({
+  const { data: statsData, isLoading: loadingStats } = useQuery({
     queryKey: ['stats', 'month'],
     queryFn: () => api.get('/transactions/stats/summary?period=month').then(r => r.data),
     retry: 1
@@ -31,7 +45,7 @@ export default function DashboardPage() {
     retry: 1
   });
 
-  const { data: txData } = useQuery({
+  const { data: txData, isLoading: loadingTx } = useQuery({
     queryKey: ['transactions', 'recent'],
     queryFn: () => api.get('/transactions?limit=8').then(r => r.data),
     retry: 1
@@ -56,6 +70,12 @@ export default function DashboardPage() {
     expense: parseFloat(d.expense || 0)
   }));
 
+  // Donut chart data from category breakdown
+  const categoryData = (statsData?.byCategory || [])
+    .filter(c => c.type === 'expense' && parseFloat(c.total) > 0)
+    .slice(0, 8)
+    .map((c, i) => ({ name: c.name || 'Other', value: parseFloat(c.total), color: c.color || DONUT_COLORS[i % DONUT_COLORS.length] }));
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('dash.greeting_morning') : hour < 17 ? t('dash.greeting_afternoon') : t('dash.greeting_evening');
 
@@ -73,58 +93,84 @@ export default function DashboardPage() {
     );
   };
 
+  const quickActions = [
+    { icon: Plus, label: t('dash.add_tx'), color: 'var(--accent)', bg: 'var(--accent-glow)', to: '/transactions' },
+    { icon: Repeat2, label: t('transfers.title') || 'Transfer', color: 'var(--green)', bg: 'var(--green-bg)', to: '/transfers' },
+    { icon: PieChart, label: t('nav.budget'), color: 'var(--yellow)', bg: 'var(--yellow-bg)', to: '/budget' },
+    { icon: HandCoins, label: t('nav.debts'), color: 'var(--red)', bg: 'var(--red-bg)', to: '/debts' },
+    { icon: Sparkles, label: t('nav.ai'), color: 'var(--purple)', bg: 'rgba(124,58,237,0.06)', to: '/ai' },
+  ];
+
   return (
-    <div className="page-content fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+    <div className="page-content page-transition stagger-in">
+      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.3px', marginBottom: 2 }}>
             {greeting}, {user?.name?.split(' ')[0]}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <Link to="/transactions" className="btn btn-primary">
-          <Plus size={15} /> {t('dash.add_tx')}
-        </Link>
       </div>
 
-      <div className="grid-4" style={{ marginBottom: 24 }}>
-        <div className="stat-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">{t('dash.total_balance')}</div>
-            <div className="stat-icon" style={{ background: 'var(--accent-glow)' }}><Wallet size={16} color="var(--accent)" /></div>
-          </div>
-          <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, user?.currency, locale)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{accounts.length} {accounts.length !== 1 ? t('dash.accounts_count_plural') : t('dash.accounts_count')}</div>
-        </div>
-        <div className="stat-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">{t('dash.monthly_income')}</div>
-            <div className="stat-icon" style={{ background: 'var(--green-bg)' }}><TrendingUp size={16} color="var(--green)" /></div>
-          </div>
-          <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(income, user?.currency, locale)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.income_count || 0} {t('dash.transactions_count')}</div>
-        </div>
-        <div className="stat-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">{t('dash.monthly_expenses')}</div>
-            <div className="stat-icon" style={{ background: 'var(--red-bg)' }}><TrendingDown size={16} color="var(--red)" /></div>
-          </div>
-          <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(expense, user?.currency, locale)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.expense_count || 0} {t('dash.transactions_count')}</div>
-        </div>
-        <div className="stat-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div className="stat-label">{t('dash.net_savings')}</div>
-            <div className="stat-icon" style={{ background: saved >= 0 ? 'var(--green-bg)' : 'var(--red-bg)' }}>
-              {saved >= 0 ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        {quickActions.map((qa, i) => (
+          <button key={i} className="quick-action" onClick={() => navigate(qa.to)}>
+            <div className="qa-icon" style={{ background: qa.bg }}>
+              <qa.icon size={14} color={qa.color} />
             </div>
-          </div>
-          <div className="stat-value" style={{ color: saved >= 0 ? 'var(--green)' : 'var(--red)' }}>{formatCurrency(Math.abs(saved), user?.currency, locale)}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{income > 0 ? `${savingsRate}% ${t('dash.savings_rate')}` : t('dash.no_income')}</div>
-        </div>
+            {qa.label}
+          </button>
+        ))}
       </div>
+
+      {/* Stats */}
+      {loadingStats ? (
+        <div className="grid-4" style={{ marginBottom: 24 }}>
+          <SkeletonStatCard /><SkeletonStatCard /><SkeletonStatCard /><SkeletonStatCard />
+        </div>
+      ) : (
+        <div className="grid-4" style={{ marginBottom: 24 }}>
+          <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div className="stat-label">{t('dash.total_balance')}</div>
+              <div className="stat-icon" style={{ background: 'var(--accent-glow)' }}><Wallet size={16} color="var(--accent)" /></div>
+            </div>
+            <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, user?.currency, locale)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{accounts.length} {accounts.length !== 1 ? t('dash.accounts_count_plural') : t('dash.accounts_count')}</div>
+          </div>
+          <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div className="stat-label">{t('dash.monthly_income')}</div>
+              <div className="stat-icon" style={{ background: 'var(--green-bg)' }}><TrendingUp size={16} color="var(--green)" /></div>
+            </div>
+            <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(income, user?.currency, locale)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.income_count || 0} {t('dash.transactions_count')}</div>
+          </div>
+          <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div className="stat-label">{t('dash.monthly_expenses')}</div>
+              <div className="stat-icon" style={{ background: 'var(--red-bg)' }}><TrendingDown size={16} color="var(--red)" /></div>
+            </div>
+            <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(expense, user?.currency, locale)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.expense_count || 0} {t('dash.transactions_count')}</div>
+          </div>
+          <div className="stat-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div className="stat-label">{t('dash.net_savings')}</div>
+              <div className="stat-icon" style={{ background: saved >= 0 ? 'var(--green-bg)' : 'var(--red-bg)' }}>
+                {saved >= 0 ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
+              </div>
+            </div>
+            <div className="stat-value" style={{ color: saved >= 0 ? 'var(--green)' : 'var(--red)' }}>{formatCurrency(Math.abs(saved), user?.currency, locale)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{income > 0 ? `${savingsRate}% ${t('dash.savings_rate')}` : t('dash.no_income')}</div>
+          </div>
+        </div>
+      )}
 
       <div className="grid-2" style={{ marginBottom: 24 }}>
         <div className="card">
@@ -160,29 +206,67 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Spending by Category Donut */}
         <div className="card">
           <div className="card-header">
             <h3 style={{ fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Sparkles size={14} color="var(--purple)" /> {t('dash.ai_insights')}
+              <PieChart size={14} color="var(--accent)" /> {t('dash.spending_by_category') || 'Spending by Category'}
             </h3>
-            <Link to="/ai" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>{t('dash.view_all')}</Link>
+            <Link to="/budget" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>{t('dash.view_all')}</Link>
           </div>
-          {aiInsights.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {aiInsights.slice(0, 3).map((insight, i) => (
-                <div key={i} className={`alert alert-${insight.type === 'warning' ? 'warning' : insight.type === 'info' ? 'info' : 'success'}`} style={{ marginBottom: 0 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 2, fontSize: 13 }}>{insight.emoji} {insight.title}</div>
-                  <div style={{ fontSize: 12, lineHeight: 1.5, opacity: 0.85 }}>{insight.message}</div>
-                </div>
-              ))}
+          {categoryData.length > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <ResponsiveContainer width={140} height={140}>
+                <RPieChart>
+                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" paddingAngle={2}>
+                    {categoryData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} stroke="none" />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => formatCurrency(v, user?.currency, locale)} />
+                </RPieChart>
+              </ResponsiveContainer>
+              <div className="donut-legend" style={{ flexDirection: 'column' }}>
+                {categoryData.map((c, i) => (
+                  <div key={i} className="donut-legend-item">
+                    <div className="donut-legend-dot" style={{ background: c.color }} />
+                    <span>{c.name}</span>
+                    <span style={{ fontFamily: 'DM Mono', fontWeight: 600, marginLeft: 4 }}>{formatCurrency(c.value, user?.currency, locale)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="empty-state">
               <p>{t('dash.more_tx_insights')}</p>
-              <Link to="/ai" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}>{t('dash.chat_ai')}</Link>
             </div>
           )}
         </div>
+      </div>
+
+      {/* AI Insights */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-header">
+          <h3 style={{ fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkles size={14} color="var(--purple)" /> {t('dash.ai_insights')}
+          </h3>
+          <Link to="/ai" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>{t('dash.view_all')}</Link>
+        </div>
+        {aiInsights.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 8 }}>
+            {aiInsights.slice(0, 3).map((insight, i) => (
+              <div key={i} className={`alert alert-${insight.type === 'warning' ? 'warning' : insight.type === 'info' ? 'info' : 'success'}`} style={{ marginBottom: 0 }}>
+                <div style={{ fontWeight: 600, marginBottom: 2, fontSize: 13 }}>{insight.emoji} {insight.title}</div>
+                <div style={{ fontSize: 12, lineHeight: 1.5, opacity: 0.85 }}>{insight.message}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <p>{t('dash.more_tx_insights')}</p>
+            <Link to="/ai" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}>{t('dash.chat_ai')}</Link>
+          </div>
+        )}
       </div>
 
       <div className="grid-2">
@@ -193,13 +277,15 @@ export default function DashboardPage() {
               {t('dash.view_all')} <ArrowRight size={12} />
             </Link>
           </div>
-          {txData?.transactions?.length > 0 ? txData.transactions.map(tx => (
+          {loadingTx ? (
+            <>{[1,2,3,4].map(i => <SkeletonTxItem key={i} />)}</>
+          ) : txData?.transactions?.length > 0 ? txData.transactions.map(tx => (
             <div key={tx.id} className="tx-item">
               <div className="tx-icon" style={{ background: tx.type === 'income' ? 'var(--green-bg)' : 'var(--red-bg)' }}>
                 {tx.type === 'income' ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
               </div>
               <div className="tx-info">
-                <div className="tx-desc">{tx.description || tx.category_name || t('dash.view_all')}</div>
+                <div className="tx-desc">{tx.description || tx.category_name || '—'}</div>
                 <div className="tx-meta">{tx.category_name || t('common.all')} · {formatShortDate(tx.date, locale)}</div>
               </div>
               <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
@@ -223,7 +309,9 @@ export default function DashboardPage() {
               {t('dash.manage')} <ArrowRight size={12} />
             </Link>
           </div>
-          {accounts.length > 0 ? accounts.slice(0, 5).map(acc => (
+          {loadingAccounts ? (
+            <>{[1,2,3].map(i => <SkeletonTxItem key={i} />)}</>
+          ) : accounts.length > 0 ? accounts.slice(0, 5).map(acc => (
             <div key={acc.id} className="tx-item">
               <div className="tx-icon" style={{ background: 'var(--bg-elevated)' }}>
                 <CreditCard size={16} color="var(--text-secondary)" />

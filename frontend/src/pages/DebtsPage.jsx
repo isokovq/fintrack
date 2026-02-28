@@ -41,7 +41,7 @@ export default function DebtsPage() {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('debts.title')}</h1>

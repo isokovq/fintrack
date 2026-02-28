@@ -32,13 +32,13 @@ export default function NotificationsPage() {
   const unread = data?.unread || 0;
 
   if (isLoading) return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div className="loading-screen" style={{ height: 200 }}><div className="loader" /></div>
     </div>
   );
 
   return (
-    <div className="page-content fade-in">
+    <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>{t('notif.title')}</h1>

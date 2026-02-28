@@ -66,6 +66,7 @@ const translations = {
     'dash.view_all': 'View all',
     'dash.more_tx_insights': 'Add more transactions for AI insights',
     'dash.chat_ai': 'Chat with AI',
+    'dash.spending_by_category': 'Spending by Category',
     'dash.recent_tx': 'Recent Transactions',
     'dash.no_tx': 'No transactions yet',
     'dash.add_first_tx': 'Add First Transaction',
@@ -267,6 +268,7 @@ const translations = {
     'transfers.receive': "You'll receive",
     'transfers.processing': 'Processing...',
     'transfers.transfer': 'Transfer',
+    'transfers.converter': 'Currency Converter',
 
     // Notifications
     'notif.title': 'Notifications',
@@ -345,6 +347,7 @@ const translations = {
     'dash.view_all': 'Все',
     'dash.more_tx_insights': 'Добавьте больше транзакций для анализа',
     'dash.chat_ai': 'Чат с ИИ',
+    'dash.spending_by_category': 'Расходы по категориям',
     'dash.recent_tx': 'Последние транзакции',
     'dash.no_tx': 'Пока нет транзакций',
     'dash.add_first_tx': 'Добавить первую',
@@ -546,6 +549,7 @@ const translations = {
     'transfers.receive': 'Вы получите',
     'transfers.processing': 'Обработка...',
     'transfers.transfer': 'Перевести',
+    'transfers.converter': 'Конвертер валют',
 
     // Notifications
     'notif.title': 'Уведомления',
@@ -624,6 +628,7 @@ const translations = {
     'dash.view_all': 'Hammasi',
     'dash.more_tx_insights': "AI tahlil uchun ko'proq tranzaksiya qo'shing",
     'dash.chat_ai': 'AI bilan suhbat',
+    'dash.spending_by_category': 'Kategoriya bo\'yicha xarajatlar',
     'dash.recent_tx': 'Oxirgi tranzaksiyalar',
     'dash.no_tx': 'Hali tranzaksiya yo\'q',
     'dash.add_first_tx': "Birinchisini qo'shing",
@@ -825,6 +830,7 @@ const translations = {
     'transfers.receive': 'Siz olasiz',
     'transfers.processing': 'Bajarilmoqda...',
     'transfers.transfer': "O'tkazish",
+    'transfers.converter': 'Valyuta konvertori',
 
     // Notifications
     'notif.title': 'Bildirishnomalar',
