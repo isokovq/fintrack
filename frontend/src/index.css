@@ -840,3 +840,46 @@ select.form-control { cursor: pointer; }
 .donut-legend-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
+
+/* ======== FAMILY TABS ======== */
+.family-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+.family-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.family-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.family-tab.active {
+  background: var(--bg-surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 640px) {
+  .family-tab {
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 4px;
+  }
+}

@@ -1,16 +1,34 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Flame } from 'lucide-react';
+
+function getHeatColor(intensity, isDark) {
+  // intensity 0-1, returns a color from cool to hot
+  if (intensity === 0) return 'transparent';
+  if (intensity < 0.2) return isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(5, 150, 105, 0.08)';
+  if (intensity < 0.4) return isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(217, 119, 6, 0.1)';
+  if (intensity < 0.6) return isDark ? 'rgba(251, 146, 60, 0.25)' : 'rgba(249, 115, 22, 0.15)';
+  if (intensity < 0.8) return isDark ? 'rgba(248, 113, 113, 0.3)' : 'rgba(220, 38, 38, 0.15)';
+  return isDark ? 'rgba(248, 113, 113, 0.45)' : 'rgba(220, 38, 38, 0.25)';
+}
+
+function getHeatBorder(intensity) {
+  if (intensity === 0) return 'transparent';
+  if (intensity < 0.3) return 'rgba(5, 150, 105, 0.3)';
+  if (intensity < 0.6) return 'rgba(249, 115, 22, 0.3)';
+  return 'rgba(220, 38, 38, 0.4)';
+}
 
 export default function CalendarPage() {
   const { user } = useAuth();
   const { t, locale } = useLanguage();
   const [date, setDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
@@ -29,12 +47,18 @@ export default function CalendarPage() {
   const calMap = {};
   calData.forEach(d => { calMap[d.date] = d; });
 
+  // Compute max expense for heatmap normalization
+  const maxExpense = useMemo(() => {
+    const vals = calData.map(d => parseFloat(d.expense || 0)).filter(v => v > 0);
+    return vals.length > 0 ? Math.max(...vals) : 1;
+  }, [calData]);
+
   const firstDay = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
   const today = new Date().toISOString().split('T')[0];
 
   const dayNames = [t('cal.sun'), t('cal.mon'), t('cal.tue'), t('cal.wed'), t('cal.thu'), t('cal.fri'), t('cal.sat')];
-  const monthName = date.toLocaleString('en', { month: 'long', year: 'numeric' });
+  const monthName = date.toLocaleString(locale, { month: 'long', year: 'numeric' });
 
   const prev = () => setDate(d => new Date(d.getFullYear(), d.getMonth() - 1));
   const next = () => setDate(d => new Date(d.getFullYear(), d.getMonth() + 1));
@@ -42,23 +66,42 @@ export default function CalendarPage() {
   const monthIncome = calData.reduce((s, d) => s + parseFloat(d.income || 0), 0);
   const monthExpense = calData.reduce((s, d) => s + parseFloat(d.expense || 0), 0);
 
+  // Spending streak: consecutive days with expenses
+  const spendingDays = calData.filter(d => parseFloat(d.expense || 0) > 0).length;
+
   return (
-    <div className="page-content page-transition">
+    <div className="page-content page-transition stagger-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('cal.title')}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('cal.subtitle')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
-          <span style={{ color: 'var(--green)', fontFamily: 'DM Mono', fontWeight: 600 }}>+{formatCurrency(monthIncome, user?.currency, locale)}</span>
-          <span style={{ color: 'var(--red)', fontFamily: 'DM Mono', fontWeight: 600 }}>-{formatCurrency(monthExpense, user?.currency, locale)}</span>
+      </div>
+
+      {/* Month summary stats */}
+      <div className="grid-3" style={{ marginBottom: 20 }}>
+        <div className="stat-card">
+          <div className="stat-label">{t('dash.monthly_income') || 'Income'}</div>
+          <div className="stat-value" style={{ color: 'var(--green)', fontSize: 18 }}>+{formatCurrency(monthIncome, user?.currency, locale)}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">{t('dash.monthly_expenses') || 'Expenses'}</div>
+          <div className="stat-value" style={{ color: 'var(--red)', fontSize: 18 }}>-{formatCurrency(monthExpense, user?.currency, locale)}</div>
+        </div>
+        <div className="stat-card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="stat-label">{t('cal.active_days') || 'Active Days'}</div>
+          </div>
+          <div className="stat-value" style={{ color: 'var(--yellow)', fontSize: 18, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Flame size={16} /> {spendingDays} / {daysInMonth}
+          </div>
         </div>
       </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <button className="btn-icon" onClick={prev}><ChevronLeft size={16} /></button>
-          <h2 style={{ fontSize: 16, fontWeight: 700 }}>{monthName}</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, textTransform: 'capitalize' }}>{monthName}</h2>
           <button className="btn-icon" onClick={next}><ChevronRight size={16} /></button>
         </div>
 
@@ -69,7 +112,7 @@ export default function CalendarPage() {
           ))}
         </div>
 
-        {/* Calendar days */}
+        {/* Calendar days with heatmap */}
         <div className="calendar-grid">
           {Array.from({ length: firstDay }, (_, i) => <div key={`empty-${i}`} />)}
           {Array.from({ length: daysInMonth }, (_, i) => {
@@ -78,12 +121,18 @@ export default function CalendarPage() {
             const data = calMap[dateStr];
             const isToday = dateStr === today;
             const isSelected = dateStr === selectedDay;
+            const expense = parseFloat(data?.expense || 0);
+            const intensity = maxExpense > 0 ? expense / maxExpense : 0;
 
             return (
               <div
                 key={day}
                 className={`calendar-day ${data ? 'has-data' : ''} ${isToday ? 'today' : ''}`}
-                style={{ background: isSelected ? 'var(--accent-glow)' : '', borderColor: isSelected ? 'var(--accent)' : isToday ? 'var(--accent)' : data ? 'var(--border)' : 'transparent' }}
+                style={{
+                  background: isSelected ? 'var(--accent-glow)' : getHeatColor(intensity, isDark),
+                  borderColor: isSelected ? 'var(--accent)' : isToday ? 'var(--accent)' : intensity > 0 ? getHeatBorder(intensity) : data ? 'var(--border)' : 'transparent',
+                  transition: 'background 0.2s, border-color 0.2s',
+                }}
                 onClick={() => setSelectedDay(dateStr === selectedDay ? null : dateStr)}
               >
                 <div className="day-num" style={{ color: isToday ? 'var(--accent)' : 'var(--text-primary)' }}>{day}</div>
@@ -97,6 +146,15 @@ export default function CalendarPage() {
             );
           })}
         </div>
+
+        {/* Heatmap legend */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 16, justifyContent: 'flex-end' }}>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t('cal.less') || 'Less'}</span>
+          {[0.1, 0.3, 0.5, 0.7, 0.9].map(v => (
+            <div key={v} style={{ width: 14, height: 14, borderRadius: 3, background: getHeatColor(v, isDark), border: `1px solid ${getHeatBorder(v)}` }} />
+          ))}
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t('cal.more') || 'More'}</span>
+        </div>
       </div>
 
       {/* Selected day transactions */}
@@ -104,7 +162,7 @@ export default function CalendarPage() {
         <div className="card fade-in">
           <div className="card-header">
             <h3 style={{ fontSize: 15, fontWeight: 700 }}>
-              {new Date(selectedDay + 'T00:00:00').toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {new Date(selectedDay + 'T00:00:00').toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
             </h3>
             {calMap[selectedDay] && (
               <div style={{ fontSize: 13, display: 'flex', gap: 12 }}>
@@ -120,7 +178,7 @@ export default function CalendarPage() {
               </div>
               <div className="tx-info">
                 <div className="tx-desc">{tx.description || tx.category_name || 'Transaction'}</div>
-                <div className="tx-meta">{tx.category_name} • {tx.account_name}</div>
+                <div className="tx-meta">{tx.category_name} · {tx.account_name}</div>
               </div>
               <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                 {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency, locale)}

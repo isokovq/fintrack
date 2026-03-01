@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatShortDate } from '../utils/format';
-import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard, ArrowLeftRight, PieChart, HandCoins, Repeat2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard, PieChart } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart as RPieChart, Pie, Cell
@@ -18,7 +18,6 @@ const DONUT_COLORS = ['#1a56db', '#059669', '#dc2626', '#d97706', '#7c3aed', '#0
 export default function DashboardPage() {
   const { user } = useAuth();
   const { t, locale, lang } = useLanguage();
-  const navigate = useNavigate();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -93,14 +92,6 @@ export default function DashboardPage() {
     );
   };
 
-  const quickActions = [
-    { icon: Plus, label: t('dash.add_tx'), color: 'var(--accent)', bg: 'var(--accent-glow)', to: '/transactions' },
-    { icon: Repeat2, label: t('transfers.title') || 'Transfer', color: 'var(--green)', bg: 'var(--green-bg)', to: '/transfers' },
-    { icon: PieChart, label: t('nav.budget'), color: 'var(--yellow)', bg: 'var(--yellow-bg)', to: '/budget' },
-    { icon: HandCoins, label: t('nav.debts'), color: 'var(--red)', bg: 'var(--red-bg)', to: '/debts' },
-    { icon: Sparkles, label: t('nav.ai'), color: 'var(--purple)', bg: 'rgba(124,58,237,0.06)', to: '/ai' },
-  ];
-
   return (
     <div className="page-content page-transition stagger-in">
       {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
@@ -114,18 +105,6 @@ export default function DashboardPage() {
             {new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        {quickActions.map((qa, i) => (
-          <button key={i} className="quick-action" onClick={() => navigate(qa.to)}>
-            <div className="qa-icon" style={{ background: qa.bg }}>
-              <qa.icon size={14} color={qa.color} />
-            </div>
-            {qa.label}
-          </button>
-        ))}
       </div>
 
       {/* Stats */}
