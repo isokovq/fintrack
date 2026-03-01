@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
 import { Plus, X, Trash2, Target, TrendingUp, Utensils, Car, ShoppingBag, Tv, Heart, Home, BookOpen, Zap, Plane, Tag, BarChart3, ShoppingCart, Dumbbell } from 'lucide-react';
+import MonthNavigator from '../components/ui/MonthNavigator';
 
 const ICON_MAP = {
   utensils: Utensils, car: Car, 'shopping-bag': ShoppingBag, tv: Tv, heart: Heart,
@@ -55,8 +56,6 @@ export default function BudgetPage() {
   const totalLimit = budgets.reduce((s, b) => s + parseFloat(b.limit_amount), 0);
   const totalSpent = budgets.reduce((s, b) => s + parseFloat(b.spent_amount), 0);
 
-  const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: new Date(2024, i).toLocaleString('en', { month: 'long' }) }));
-
   return (
     <div className="page-content page-transition stagger-in">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -70,17 +69,8 @@ export default function BudgetPage() {
         </div>
       </div>
 
-      {/* Month selector */}
-      <div className="card" style={{ marginBottom: 20, padding: '14px 20px' }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <select className="form-control" style={{ width: 160 }} value={month} onChange={e => setMonth(+e.target.value)}>
-            {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select className="form-control" style={{ width: 100 }} value={year} onChange={e => setYear(+e.target.value)}>
-            {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
+      {/* Month Navigator */}
+      <MonthNavigator month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
 
       {/* Income target card */}
       {incomeBudget && (

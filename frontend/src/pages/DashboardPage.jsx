@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { SkeletonStatCard, SkeletonCard, SkeletonTxItem } from '../components/ui/Skeleton';
 import Onboarding from '../components/ui/Onboarding';
+import MonthNavigator from '../components/ui/MonthNavigator';
 
 const DONUT_COLORS = ['#1a56db', '#059669', '#dc2626', '#d97706', '#7c3aed', '#06b6d4', '#ec4899', '#f97316'];
 
@@ -19,6 +20,10 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { t, locale, lang } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+  const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
 
   useEffect(() => {
     if (!localStorage.getItem('onboarding_done')) {
@@ -33,8 +38,8 @@ export default function DashboardPage() {
   });
 
   const { data: statsData, isLoading: loadingStats } = useQuery({
-    queryKey: ['stats', 'month'],
-    queryFn: () => api.get('/transactions/stats/summary?period=month').then(r => r.data),
+    queryKey: ['stats', 'month', month, year],
+    queryFn: () => api.get(`/transactions/stats/summary?period=month&year=${year}&month=${month}`).then(r => r.data),
     retry: 1
   });
 
@@ -45,8 +50,13 @@ export default function DashboardPage() {
   });
 
   const { data: txData, isLoading: loadingTx } = useQuery({
-    queryKey: ['transactions', 'recent'],
-    queryFn: () => api.get('/transactions?limit=8').then(r => r.data),
+    queryKey: ['transactions', 'recent', month, year],
+    queryFn: () => {
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+      return api.get(`/transactions?limit=8&start_date=${startDate}&end_date=${endDate}`).then(r => r.data);
+    },
     retry: 1
   });
 
@@ -102,10 +112,16 @@ export default function DashboardPage() {
             {greeting}, {user?.name?.split(' ')[0]}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-            {new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
+            {isCurrentMonth
+              ? new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })
+              : new Date(year, month - 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' })
+            }
           </p>
         </div>
       </div>
+
+      {/* Month Navigator */}
+      <MonthNavigator month={month} year={year} onChange={(m, y) => { setMonth(m); setYear(y); }} />
 
       {/* Stats */}
       {loadingStats ? (

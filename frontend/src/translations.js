@@ -14,6 +14,7 @@ const translations = {
     'common.confirm_delete': 'Are you sure?',
     'common.copied': 'Copied',
     'common.copy': 'Copy',
+    'month_nav.today': 'Go to current month',
 
     // Auth / Login
     'auth.tagline': 'Personal finance, simplified',
@@ -329,6 +330,7 @@ const translations = {
     'common.confirm_delete': 'Вы уверены?',
     'common.copied': 'Скопировано',
     'common.copy': 'Копировать',
+    'month_nav.today': 'Перейти к текущему месяцу',
 
     // Auth / Login
     'auth.tagline': 'Личные финансы — просто',
@@ -644,6 +646,7 @@ const translations = {
     'common.confirm_delete': 'Ishonchingiz komilmi?',
     'common.copied': 'Nusxalandi',
     'common.copy': 'Nusxalash',
+    'month_nav.today': 'Joriy oyga qaytish',
 
     // Auth / Login
     'auth.tagline': 'Shaxsiy moliya — oddiy va qulay',

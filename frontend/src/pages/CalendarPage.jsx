@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Flame } from 'lucide-react';
+import { TrendingUp, TrendingDown, Flame } from 'lucide-react';
+import MonthNavigator from '../components/ui/MonthNavigator';
 
 function getHeatColor(intensity, isDark) {
   // intensity 0-1, returns a color from cool to hot
@@ -58,10 +59,11 @@ export default function CalendarPage() {
   const today = new Date().toISOString().split('T')[0];
 
   const dayNames = [t('cal.sun'), t('cal.mon'), t('cal.tue'), t('cal.wed'), t('cal.thu'), t('cal.fri'), t('cal.sat')];
-  const monthName = date.toLocaleString(locale, { month: 'long', year: 'numeric' });
 
-  const prev = () => setDate(d => new Date(d.getFullYear(), d.getMonth() - 1));
-  const next = () => setDate(d => new Date(d.getFullYear(), d.getMonth() + 1));
+  const handleMonthChange = (m, y) => {
+    setDate(new Date(y, m - 1));
+    setSelectedDay(null);
+  };
 
   const monthIncome = calData.reduce((s, d) => s + parseFloat(d.income || 0), 0);
   const monthExpense = calData.reduce((s, d) => s + parseFloat(d.expense || 0), 0);
@@ -98,12 +100,10 @@ export default function CalendarPage() {
         </div>
       </div>
 
+      {/* Month Navigator */}
+      <MonthNavigator month={month} year={year} onChange={handleMonthChange} />
+
       <div className="card" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <button className="btn-icon" onClick={prev}><ChevronLeft size={16} /></button>
-          <h2 style={{ fontSize: 16, fontWeight: 700, textTransform: 'capitalize' }}>{monthName}</h2>
-          <button className="btn-icon" onClick={next}><ChevronRight size={16} /></button>
-        </div>
 
         {/* Day names */}
         <div className="calendar-grid" style={{ marginBottom: 8 }}>

@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
 import { Users, Plus, LogOut, Copy, Check, Receipt, PieChart, ArrowRightLeft, ChevronDown, ChevronUp, CheckCircle, Clock, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import MonthNavigator from '../components/ui/MonthNavigator';
 
 export default function FamilyPage() {
   const { user } = useAuth();
@@ -16,6 +17,10 @@ export default function FamilyPage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
+  const now = new Date();
+  const [fMonth, setFMonth] = useState(now.getMonth() + 1);
+  const [fYear, setFYear] = useState(now.getFullYear());
+
   // Shared expense form state
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expDesc, setExpDesc] = useState('');
@@ -25,8 +30,8 @@ export default function FamilyPage() {
   const [expandedExpense, setExpandedExpense] = useState(null);
 
   const { data: family, isLoading } = useQuery({
-    queryKey: ['family'],
-    queryFn: () => api.get('/family').then(r => r.data)
+    queryKey: ['family', fMonth, fYear],
+    queryFn: () => api.get(`/family?month=${fMonth}&year=${fYear}`).then(r => r.data)
   });
 
   const { data: sharedExpenses = [] } = useQuery({
@@ -198,6 +203,7 @@ export default function FamilyPage() {
       {/* ====== OVERVIEW TAB ====== */}
       {activeTab === 'overview' && (
         <div className="stagger-in" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <MonthNavigator month={fMonth} year={fYear} onChange={(m, y) => { setFMonth(m); setFYear(y); }} />
           {/* Family Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div className="card" style={{ padding: '16px 20px' }}>

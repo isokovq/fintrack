@@ -75,6 +75,11 @@ router.get('/', auth, async (req, res) => {
       [familyId]
     );
 
+    // Support month/year query params (default to current month)
+    const now = new Date();
+    const qMonth = parseInt(req.query.month) || (now.getMonth() + 1);
+    const qYear = parseInt(req.query.year) || now.getFullYear();
+
     // Family combined stats
     const stats = await db.query(
       `SELECT
@@ -83,11 +88,11 @@ router.get('/', auth, async (req, res) => {
        FROM transactions t
        JOIN users u ON u.id = t.user_id
        WHERE u.family_id=$1
-       AND DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE)`,
-      [familyId]
+       AND EXTRACT(MONTH FROM t.date)=$2 AND EXTRACT(YEAR FROM t.date)=$3`,
+      [familyId, qMonth, qYear]
     );
 
-    // Per-member stats this month
+    // Per-member stats for selected month
     const memberStats = await db.query(
       `SELECT t.user_id,
         SUM(CASE WHEN t.type='income' THEN t.amount ELSE 0 END) as income,
@@ -96,22 +101,22 @@ router.get('/', auth, async (req, res) => {
        FROM transactions t
        JOIN users u ON u.id = t.user_id
        WHERE u.family_id=$1
-       AND DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE)
+       AND EXTRACT(MONTH FROM t.date)=$2 AND EXTRACT(YEAR FROM t.date)=$3
        GROUP BY t.user_id`,
-      [familyId]
+      [familyId, qMonth, qYear]
     );
 
-    // Top categories across family
+    // Top categories across family for selected month
     const topCategories = await db.query(
       `SELECT c.name, c.color, SUM(t.amount) as total
        FROM transactions t
        JOIN users u ON u.id = t.user_id
        LEFT JOIN categories c ON c.id = t.category_id
        WHERE u.family_id=$1 AND t.type='expense'
-       AND DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE)
+       AND EXTRACT(MONTH FROM t.date)=$2 AND EXTRACT(YEAR FROM t.date)=$3
        GROUP BY c.name, c.color
        ORDER BY total DESC LIMIT 5`,
-      [familyId]
+      [familyId, qMonth, qYear]
     );
 
     const memberStatsMap = {};

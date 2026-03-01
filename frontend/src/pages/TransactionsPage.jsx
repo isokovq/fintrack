@@ -8,6 +8,7 @@ import TransactionModal from '../components/transactions/TransactionModal';
 import { Plus, Pencil, Trash2, Search, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
 import { SkeletonTableRow } from '../components/ui/Skeleton';
 import SwipeRow from '../components/ui/SwipeRow';
+import MonthNavigator from '../components/ui/MonthNavigator';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
@@ -19,10 +20,18 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(0);
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const endDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+
   const { data, isLoading } = useQuery({
-    queryKey: ['transactions', filters, page],
+    queryKey: ['transactions', filters, page, month, year],
     queryFn: () => {
-      const params = new URLSearchParams({ limit: 20, offset: page * 20 });
+      const params = new URLSearchParams({ limit: '20', offset: String(page * 20), start_date: startDate, end_date: endDate });
       if (filters.type) params.set('type', filters.type);
       return api.get(`/transactions?${params}`).then(r => r.data);
     }
@@ -41,6 +50,12 @@ export default function TransactionsPage() {
   const filtered = filters.search
     ? txs.filter(tx => tx.description?.toLowerCase().includes(filters.search.toLowerCase()) || tx.category_name?.toLowerCase().includes(filters.search.toLowerCase()))
     : txs;
+
+  const handleMonthChange = (m, y) => {
+    setMonth(m);
+    setYear(y);
+    setPage(0);
+  };
 
   const renderMobileRow = (tx) => {
     const row = (
@@ -85,6 +100,9 @@ export default function TransactionsPage() {
           <Plus size={15} /> {t('tx.add')}
         </button>
       </div>
+
+      {/* Month Navigator */}
+      <MonthNavigator month={month} year={year} onChange={handleMonthChange} />
 
       {/* Filters */}
       <div className="card" style={{ marginBottom: 20, padding: '14px 20px' }}>
