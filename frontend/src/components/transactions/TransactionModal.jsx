@@ -1,9 +1,70 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
-import { X, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
+import { X, Sparkles, TrendingDown, TrendingUp, ChevronDown, Check, Search } from 'lucide-react';
 import { translateCategory } from '../../translations';
+
+function CategoryPicker({ categories, value, onChange, placeholder, lang }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    if (open && searchRef.current) searchRef.current.focus();
+  }, [open]);
+
+  const selected = categories.find(c => c.id === value);
+  const filtered = categories.filter(c => {
+    const translated = translateCategory(c.name, lang).toLowerCase();
+    const original = c.name.toLowerCase();
+    const q = search.toLowerCase();
+    return translated.includes(q) || original.includes(q);
+  });
+
+  return (
+    <div className="category-picker" ref={ref}>
+      <button type="button" className="form-control category-picker-trigger" onClick={() => setOpen(!open)}>
+        <span style={{ opacity: selected ? 1 : 0.5 }}>
+          {selected ? translateCategory(selected.name, lang) : placeholder}
+        </span>
+        <ChevronDown size={14} style={{ flexShrink: 0, opacity: 0.5, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </button>
+      {open && (
+        <div className="category-picker-dropdown">
+          <div className="category-picker-search">
+            <Search size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
+            <input ref={searchRef} type="text" placeholder="..." value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <div className="category-picker-list">
+            <div className={`category-picker-item ${!value ? 'selected' : ''}`}
+              onClick={() => { onChange(''); setOpen(false); setSearch(''); }}>
+              <span style={{ opacity: 0.5 }}>{placeholder}</span>
+            </div>
+            {filtered.map(c => (
+              <div key={c.id} className={`category-picker-item ${c.id === value ? 'selected' : ''}`}
+                onClick={() => { onChange(c.id); setOpen(false); setSearch(''); }}>
+                {c.color && <div className="category-dot" style={{ background: c.color }} />}
+                <span>{translateCategory(c.name, lang)}</span>
+                {c.id === value && <Check size={13} style={{ marginLeft: 'auto', color: 'var(--accent)' }} />}
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="category-picker-item" style={{ opacity: 0.5, cursor: 'default' }}>—</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function TransactionModal({ onClose, editTx = null }) {
   const { t, lang } = useLanguage();
@@ -111,10 +172,13 @@ export default function TransactionModal({ onClose, editTx = null }) {
             </div>
             <div className="form-group">
               <label className="form-label">{t('txm.category')}</label>
-              <select className="form-control" value={form.category_id} onChange={set('category_id')}>
-                <option value="">{t('txm.select_category')}</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{translateCategory(c.name, lang)}</option>)}
-              </select>
+              <CategoryPicker
+                categories={categories}
+                value={form.category_id}
+                onChange={(id) => setForm(f => ({ ...f, category_id: id }))}
+                placeholder={t('txm.select_category')}
+                lang={lang}
+              />
             </div>
           </div>
 

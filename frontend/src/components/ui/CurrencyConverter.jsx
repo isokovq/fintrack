@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../utils/api';
 import { RefreshCw, ArrowLeftRight } from 'lucide-react';
 
-const POPULAR_RATES = {
-  'USD-UZS': 12750, 'UZS-USD': 1 / 12750,
-  'EUR-UZS': 13900, 'UZS-EUR': 1 / 13900,
-  'RUB-UZS': 138, 'UZS-RUB': 1 / 138,
-  'USD-EUR': 0.92, 'EUR-USD': 1.09,
-  'USD-RUB': 92.5, 'RUB-USD': 1 / 92.5,
-  'EUR-RUB': 100.8, 'RUB-EUR': 1 / 100.8,
-};
-
-const CURRENCIES = ['USD', 'EUR', 'UZS', 'RUB', 'GBP', 'TRY', 'KZT', 'CNY'];
+const CURRENCIES = ['USD', 'EUR', 'UZS', 'RUB', 'GBP', 'TRY', 'KZT', 'CNY', 'JPY', 'CHF', 'KRW'];
 
 export default function CurrencyConverter() {
   const { t } = useLanguage();
@@ -19,25 +12,32 @@ export default function CurrencyConverter() {
   const [to, setTo] = useState('UZS');
   const [amount, setAmount] = useState('1');
   const [rate, setRate] = useState(null);
-  const [loading, setLoading] = useState(false);
+
+  // Fetch real CBU rates
+  const { data: ratesData, isLoading } = useQuery({
+    queryKey: ['exchange-rates'],
+    queryFn: () => api.get('/exchange-rates').then(r => r.data),
+    staleTime: 3600000, // 1 hour cache
+    retry: 1
+  });
 
   useEffect(() => {
-    const key = `${from}-${to}`;
-    if (POPULAR_RATES[key]) {
-      setRate(POPULAR_RATES[key]);
-    } else if (from === to) {
+    const rates = ratesData?.rates;
+    if (!rates) { setRate(null); return; }
+
+    if (from === to) {
       setRate(1);
     } else {
-      // Fallback: try to compute through USD
-      const toUSD = POPULAR_RATES[`${from}-USD`] || (POPULAR_RATES[`USD-${from}`] ? 1 / POPULAR_RATES[`USD-${from}`] : null);
-      const fromUSD = POPULAR_RATES[`USD-${to}`] || (POPULAR_RATES[`${to}-USD`] ? 1 / POPULAR_RATES[`${to}-USD`] : null);
-      if (toUSD && fromUSD) {
-        setRate(toUSD * fromUSD);
+      // All rates are X currency -> UZS
+      const fromToUZS = from === 'UZS' ? 1 : (rates[from] || null);
+      const toToUZS = to === 'UZS' ? 1 : (rates[to] || null);
+      if (fromToUZS && toToUZS) {
+        setRate(fromToUZS / toToUZS);
       } else {
         setRate(null);
       }
     }
-  }, [from, to]);
+  }, [from, to, ratesData]);
 
   const swap = () => { setFrom(to); setTo(from); };
   const result = rate && amount ? (parseFloat(amount) * rate) : null;
@@ -54,6 +54,9 @@ export default function CurrencyConverter() {
       <div className="converter-header">
         <RefreshCw size={14} color="var(--accent)" />
         <span>{t('transfers.converter') || 'Currency Converter'}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-muted)' }}>
+          {isLoading ? '...' : ratesData ? 'CBU.uz' : ''}
+        </span>
       </div>
       <div className="converter-body">
         <div className="converter-row">

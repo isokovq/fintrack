@@ -22,6 +22,7 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/family', require('./routes/family'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/exchange-rates', require('./routes/exchangeRates'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
@@ -71,7 +72,7 @@ async function runMigrations() {
   }
 }
 
-// Ensure all default categories exist (runs every startup)
+// Ensure all default categories exist and remove duplicates (runs every startup)
 async function seedDefaultCategories() {
   const defaults = [
     { name: 'Food & Dining', type: 'expense', icon: 'utensils', color: '#ef4444' },
@@ -99,6 +100,24 @@ async function seedDefaultCategories() {
   ];
 
   try {
+    // Step 1: Remove duplicate default categories (keep the one used in transactions, or the first one)
+    await db.query(`
+      DELETE FROM categories
+      WHERE id IN (
+        SELECT id FROM (
+          SELECT id, name, user_id,
+            ROW_NUMBER() OVER (PARTITION BY name, user_id ORDER BY
+              (SELECT COUNT(*) FROM transactions WHERE category_id = categories.id) DESC,
+              created_at ASC
+            ) as rn
+          FROM categories
+          WHERE user_id IS NULL AND is_default = true
+        ) dupes
+        WHERE rn > 1
+      )
+    `);
+
+    // Step 2: Insert any missing categories
     for (const cat of defaults) {
       const exists = await db.query(
         'SELECT 1 FROM categories WHERE name=$1 AND user_id IS NULL', [cat.name]

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -42,14 +42,32 @@ export default function AccountsPage() {
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const totalBalance = accounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0);
+  // Fetch CBU exchange rates for proper multi-currency balance
+  const { data: ratesData } = useQuery({
+    queryKey: ['exchange-rates'],
+    queryFn: () => api.get('/exchange-rates').then(r => r.data),
+    staleTime: 3600000,
+    retry: 1
+  });
+
+  const totalBalance = useMemo(() => {
+    const rates = ratesData?.rates || {};
+    return accounts.reduce((sum, acc) => {
+      const bal = parseFloat(acc.balance || 0);
+      const currency = acc.currency || 'UZS';
+      if (currency === 'UZS') return sum + bal;
+      const rate = rates[currency];
+      if (rate) return sum + (bal * rate);
+      return sum + bal;
+    }, 0);
+  }, [accounts, ratesData]);
 
   return (
     <div className="page-content page-transition">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.3px' }}>{t('acc.title')}</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('acc.total')}: <strong style={{ color: 'var(--text-primary)', fontFamily: 'DM Mono' }}>{formatCurrency(totalBalance, user?.currency, locale)}</strong></p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('acc.total')}: <strong style={{ color: 'var(--text-primary)', fontFamily: 'DM Mono' }}>{formatCurrency(totalBalance, 'UZS', locale)}</strong></p>
         </div>
         <button className="btn btn-primary" onClick={() => { setEditAcc(null); setShowModal(true); }}>
           <Plus size={15} /> {t('acc.add')}

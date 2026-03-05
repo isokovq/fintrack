@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -68,7 +68,26 @@ export default function DashboardPage() {
     retry: 1
   });
 
-  const totalBalance = accounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0);
+  // Fetch CBU exchange rates for proper multi-currency balance
+  const { data: ratesData } = useQuery({
+    queryKey: ['exchange-rates'],
+    queryFn: () => api.get('/exchange-rates').then(r => r.data),
+    staleTime: 3600000, // 1 hour
+    retry: 1
+  });
+
+  // Convert all account balances to UZS using real CBU rates
+  const totalBalance = useMemo(() => {
+    const rates = ratesData?.rates || {};
+    return accounts.reduce((sum, acc) => {
+      const bal = parseFloat(acc.balance || 0);
+      const currency = acc.currency || 'UZS';
+      if (currency === 'UZS') return sum + bal;
+      const rate = rates[currency];
+      if (rate) return sum + (bal * rate);
+      return sum + bal; // fallback if no rate
+    }, 0);
+  }, [accounts, ratesData]);
   const income = parseFloat(statsData?.summary?.total_income || 0);
   const expense = parseFloat(statsData?.summary?.total_expense || 0);
   const saved = income - expense;
@@ -140,7 +159,7 @@ export default function DashboardPage() {
               <div className="stat-label">{t('dash.total_balance')}</div>
               <div className="stat-icon" style={{ background: 'var(--accent-glow)' }}><Wallet size={16} color="var(--accent)" /></div>
             </div>
-            <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, user?.currency, locale)}</div>
+            <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, 'UZS', locale)}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{accounts.length} {accounts.length !== 1 ? t('dash.accounts_count_plural') : t('dash.accounts_count')}</div>
           </div>
           <div className="stat-card">
