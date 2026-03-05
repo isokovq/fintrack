@@ -101,21 +101,16 @@ async function seedDefaultCategories() {
   ];
 
   try {
-    // Step 1: Remove duplicate default categories (keep the one used in transactions, or the first one)
+    // Step 1: Remove duplicate default categories — keep only the oldest one per name
     await db.query(`
-      DELETE FROM categories
-      WHERE id IN (
-        SELECT id FROM (
-          SELECT id, name, user_id,
-            ROW_NUMBER() OVER (PARTITION BY name, user_id ORDER BY
-              (SELECT COUNT(*) FROM transactions WHERE category_id = categories.id) DESC,
-              created_at ASC
-            ) as rn
-          FROM categories
-          WHERE user_id IS NULL AND is_default = true
-        ) dupes
-        WHERE rn > 1
-      )
+      DELETE FROM categories c
+      WHERE user_id IS NULL AND is_default = true
+        AND EXISTS (
+          SELECT 1 FROM categories c2
+          WHERE c2.name = c.name AND c2.user_id IS NULL AND c2.is_default = true
+            AND c2.id <> c.id
+            AND c2.id < c.id
+        )
     `);
 
     // Step 2: Insert any missing categories

@@ -38,11 +38,7 @@ function CategoryPicker({ categories, value, onChange, placeholder, lang }) {
         <ChevronDown size={14} style={{ flexShrink: 0, opacity: 0.5, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
       {open && (
-        <div className="category-picker-dropdown">
-          <div className="category-picker-search">
-            <Search size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
-            <input ref={searchRef} type="text" placeholder="..." value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
+        <div className="category-picker-dropdown category-picker-upward">
           <div className="category-picker-list">
             <div className={`category-picker-item ${!value ? 'selected' : ''}`}
               onClick={() => { onChange(''); setOpen(false); setSearch(''); }}>
@@ -59,6 +55,10 @@ function CategoryPicker({ categories, value, onChange, placeholder, lang }) {
             {filtered.length === 0 && (
               <div className="category-picker-item" style={{ opacity: 0.5, cursor: 'default' }}>—</div>
             )}
+          </div>
+          <div className="category-picker-search">
+            <Search size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
+            <input ref={searchRef} type="text" placeholder="..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
       )}
