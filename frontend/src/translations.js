@@ -948,4 +948,61 @@ const translations = {
   }
 };
 
+// Category name translations (DB stores English names, frontend translates)
+export const categoryTranslations = {
+  ru: {
+    'Food & Dining': 'Еда и рестораны',
+    'Transportation': 'Транспорт',
+    'Shopping': 'Покупки',
+    'Entertainment': 'Развлечения',
+    'Healthcare': 'Здоровье',
+    'Housing': 'Жильё',
+    'Education': 'Образование',
+    'Utilities': 'Коммунальные',
+    'Travel': 'Путешествия',
+    'Groceries': 'Продукты',
+    'Sports & Nutrition': 'Спорт и питание',
+    'Baby Expenses': 'Расходы на ребёнка',
+    'Presents': 'Подарки',
+    'Wife Expenses': 'Расходы жены',
+    'Extended Family': 'Расширенная семья',
+    'Work Expenses': 'Рабочие расходы',
+    'Other Expense': 'Прочие расходы',
+    'Salary': 'Зарплата',
+    'Freelance': 'Фриланс',
+    'Investment': 'Инвестиции',
+    'Gift': 'Подарок',
+    'Other Income': 'Прочий доход',
+  },
+  uz: {
+    'Food & Dining': 'Ovqat va restoran',
+    'Transportation': 'Transport',
+    'Shopping': 'Xaridlar',
+    'Entertainment': 'Ko\'ngil ochar',
+    'Healthcare': 'Sog\'liq',
+    'Housing': 'Uy-joy',
+    'Education': 'Ta\'lim',
+    'Utilities': 'Kommunal xizmatlar',
+    'Travel': 'Sayohat',
+    'Groceries': 'Oziq-ovqat',
+    'Sports & Nutrition': 'Sport va ovqatlanish',
+    'Baby Expenses': 'Bola xarajatlari',
+    'Presents': 'Sovg\'alar',
+    'Wife Expenses': 'Xotin xarajatlari',
+    'Extended Family': 'Katta oila xarajatlari',
+    'Work Expenses': 'Ish xarajatlari',
+    'Other Expense': 'Boshqa xarajatlar',
+    'Salary': 'Maosh',
+    'Freelance': 'Frilanser',
+    'Investment': 'Investitsiya',
+    'Gift': 'Sovg\'a',
+    'Other Income': 'Boshqa daromad',
+  }
+};
+
+export function translateCategory(name, lang) {
+  if (!name || lang === 'en') return name;
+  return categoryTranslations[lang]?.[name] || name;
+}
+
 export default translations;

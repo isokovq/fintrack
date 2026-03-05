@@ -4,18 +4,20 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency } from '../utils/format';
-import { Plus, X, Trash2, Target, TrendingUp, Utensils, Car, ShoppingBag, Tv, Heart, Home, BookOpen, Zap, Plane, Tag, BarChart3, ShoppingCart, Dumbbell } from 'lucide-react';
+import { translateCategory } from '../translations';
+import { Plus, X, Trash2, Target, TrendingUp, Utensils, Car, ShoppingBag, Tv, Heart, Home, BookOpen, Zap, Plane, Tag, BarChart3, ShoppingCart, Dumbbell, Baby, Gift, Briefcase, Users, MoreHorizontal } from 'lucide-react';
 import MonthNavigator from '../components/ui/MonthNavigator';
 
 const ICON_MAP = {
   utensils: Utensils, car: Car, 'shopping-bag': ShoppingBag, tv: Tv, heart: Heart,
   home: Home, book: BookOpen, zap: Zap, plane: Plane, 'shopping-cart': ShoppingCart,
-  dumbbell: Dumbbell
+  dumbbell: Dumbbell, baby: Baby, gift: Gift, briefcase: Briefcase, users: Users,
+  'more-horizontal': MoreHorizontal
 };
 
 export default function BudgetPage() {
   const { user } = useAuth();
-  const { t, locale } = useLanguage();
+  const { t, locale, lang } = useLanguage();
   const qc = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -133,7 +135,7 @@ export default function BudgetPage() {
                     {(() => { const Icon = ICON_MAP[b.icon] || Tag; return <Icon size={16} color={b.color} />; })()}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{b.category_name}</div>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{translateCategory(b.category_name, lang)}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                       {formatCurrency(b.spent_amount, user?.currency, locale)} of {formatCurrency(b.limit_amount, user?.currency, locale)}
                     </div>
@@ -177,7 +179,7 @@ export default function BudgetPage() {
                 <label className="form-label">{t('budget.category')}</label>
                 <select className="form-control" value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} required>
                   <option value="">Select category</option>
-                  {categories.filter(c => !budgets.find(b => b.category_id === c.id)).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {categories.filter(c => !budgets.find(b => b.category_id === c.id)).map(c => <option key={c.id} value={c.id}>{translateCategory(c.name, lang)}</option>)}
                 </select>
               </div>
               <div className="form-group">

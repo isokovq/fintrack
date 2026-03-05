@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 import { X, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
+import { translateCategory } from '../../translations';
 
 export default function TransactionModal({ onClose, editTx = null }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const qc = useQueryClient();
   const [form, setForm] = useState({
     type: 'expense', amount: '', description: '', date: new Date().toISOString().split('T')[0],
@@ -112,7 +113,7 @@ export default function TransactionModal({ onClose, editTx = null }) {
               <label className="form-label">{t('txm.category')}</label>
               <select className="form-control" value={form.category_id} onChange={set('category_id')}>
                 <option value="">{t('txm.select_category')}</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categories.map(c => <option key={c.id} value={c.id}>{translateCategory(c.name, lang)}</option>)}
               </select>
             </div>
           </div>

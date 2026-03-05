@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatLocalDate } from '../utils/format';
+import { translateCategory } from '../translations';
 import { TrendingUp, TrendingDown, Flame } from 'lucide-react';
 import MonthNavigator from '../components/ui/MonthNavigator';
 
@@ -26,7 +27,7 @@ function getHeatBorder(intensity) {
 
 export default function CalendarPage() {
   const { user } = useAuth();
-  const { t, locale } = useLanguage();
+  const { t, locale, lang } = useLanguage();
   const [date, setDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -162,7 +163,7 @@ export default function CalendarPage() {
         <div className="card fade-in">
           <div className="card-header">
             <h3 style={{ fontSize: 15, fontWeight: 700 }}>
-              {new Date(selectedDay + 'T00:00:00').toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
+              {formatLocalDate(new Date(selectedDay + 'T00:00:00'), locale, { weekday: 'long', month: 'long', day: 'numeric' })}
             </h3>
             {calMap[selectedDay] && (
               <div style={{ fontSize: 13, display: 'flex', gap: 12 }}>
@@ -177,8 +178,8 @@ export default function CalendarPage() {
                 {tx.type === 'income' ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
               </div>
               <div className="tx-info">
-                <div className="tx-desc">{tx.description || tx.category_name || 'Transaction'}</div>
-                <div className="tx-meta">{tx.category_name} · {tx.account_name}</div>
+                <div className="tx-desc">{tx.description || translateCategory(tx.category_name, lang) || 'Transaction'}</div>
+                <div className="tx-meta">{translateCategory(tx.category_name, lang)} · {tx.account_name}</div>
               </div>
               <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                 {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency, locale)}

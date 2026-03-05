@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
-import { formatCurrency, formatShortDate } from '../utils/format';
+import { formatCurrency, formatShortDate, formatLocalDate } from '../utils/format';
+import { translateCategory } from '../translations';
 import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard, PieChart } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -73,17 +74,21 @@ export default function DashboardPage() {
   const saved = income - expense;
   const savingsRate = income > 0 ? Math.round((saved / income) * 100) : 0;
 
-  const trendFormatted = trendData.map(d => ({
-    month: d.month?.substring(5),
-    income: parseFloat(d.income || 0),
-    expense: parseFloat(d.expense || 0)
-  }));
+  const trendFormatted = trendData.map(d => {
+    const monthNum = parseInt(d.month?.substring(5), 10);
+    const monthLabel = formatLocalDate(new Date(2024, monthNum - 1), locale, { month: 'short' });
+    return {
+      month: monthLabel,
+      income: parseFloat(d.income || 0),
+      expense: parseFloat(d.expense || 0)
+    };
+  });
 
   // Donut chart data from category breakdown
   const categoryData = (statsData?.byCategory || [])
     .filter(c => c.type === 'expense' && parseFloat(c.total) > 0)
     .slice(0, 8)
-    .map((c, i) => ({ name: c.name || 'Other', value: parseFloat(c.total), color: c.color || DONUT_COLORS[i % DONUT_COLORS.length] }));
+    .map((c, i) => ({ name: translateCategory(c.name, lang) || 'Other', value: parseFloat(c.total), color: c.color || DONUT_COLORS[i % DONUT_COLORS.length] }));
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t('dash.greeting_morning') : hour < 17 ? t('dash.greeting_afternoon') : t('dash.greeting_evening');
@@ -113,8 +118,8 @@ export default function DashboardPage() {
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
             {isCurrentMonth
-              ? new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })
-              : new Date(year, month - 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' })
+              ? formatLocalDate(new Date(), locale, { weekday: 'long', month: 'long', day: 'numeric' })
+              : formatLocalDate(new Date(year, month - 1), locale, { month: 'long', year: 'numeric' })
             }
           </p>
         </div>
@@ -281,7 +286,7 @@ export default function DashboardPage() {
               </div>
               <div className="tx-info">
                 <div className="tx-desc">{tx.description || tx.category_name || '—'}</div>
-                <div className="tx-meta">{tx.category_name || t('common.all')} · {formatShortDate(tx.date, locale)}</div>
+                <div className="tx-meta">{translateCategory(tx.category_name, lang) || t('common.all')} · {formatShortDate(tx.date, locale)}</div>
               </div>
               <div className="tx-amount" style={{ color: tx.type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                 {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount, user?.currency, locale)}

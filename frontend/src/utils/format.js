@@ -1,3 +1,38 @@
+// Uzbek month names fallback (uz-UZ locale not supported in most JS engines)
+const UZ_MONTHS_LONG = [
+  'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+  'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+];
+const UZ_MONTHS_SHORT = [
+  'Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun',
+  'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'
+];
+const UZ_WEEKDAYS = [
+  'Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'
+];
+
+/**
+ * Format a date with proper Uzbek support.
+ * options: subset of Intl.DateTimeFormat options (weekday, month, day, year)
+ */
+export function formatLocalDate(date, locale = 'en-US', options = {}) {
+  const d = new Date(date);
+  if (locale === 'uz-UZ') {
+    const parts = [];
+    if (options.weekday === 'long') parts.push(UZ_WEEKDAYS[d.getDay()]);
+    if (options.month === 'long') parts.push(UZ_MONTHS_LONG[d.getMonth()]);
+    if (options.month === 'short') parts.push(UZ_MONTHS_SHORT[d.getMonth()]);
+    if (options.day === 'numeric') parts.push(d.getDate());
+    if (options.year === 'numeric') parts.push(d.getFullYear());
+    return parts.join(' ');
+  }
+  return d.toLocaleDateString(locale, options);
+}
+
+export function getUzMonthLong(monthIndex) {
+  return UZ_MONTHS_LONG[monthIndex];
+}
+
 export function formatCurrency(amount, currency = 'USD', locale = 'en-US') {
   let formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
@@ -15,14 +50,15 @@ export function formatCurrency(amount, currency = 'USD', locale = 'en-US') {
 }
 
 export function formatDate(date, locale = 'en-US') {
-  return new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+  return formatLocalDate(date, locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function formatShortDate(date, locale = 'en-US') {
-  return new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+  return formatLocalDate(date, locale, { month: 'short', day: 'numeric' });
 }
 
 export function getMonthName(month, locale = 'en-US') {
+  if (locale === 'uz-UZ') return UZ_MONTHS_LONG[month - 1];
   return new Date(2024, month - 1).toLocaleString(locale, { month: 'long' });
 }
 

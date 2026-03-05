@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
+import { translateCategory } from '../translations';
 import TransactionModal from '../components/transactions/TransactionModal';
 import { Plus, Pencil, Trash2, Search, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
 import { SkeletonTableRow } from '../components/ui/Skeleton';
@@ -12,7 +13,7 @@ import MonthNavigator from '../components/ui/MonthNavigator';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
-  const { t, locale } = useLanguage();
+  const { t, locale, lang } = useLanguage();
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editTx, setEditTx] = useState(null);
@@ -66,7 +67,7 @@ export default function TransactionsPage() {
         <div className="tx-info">
           <div className="tx-desc">{tx.description || '—'}</div>
           <div className="tx-meta">
-            {tx.category_name || '—'} · {formatDate(tx.date, locale)}
+            {translateCategory(tx.category_name, lang) || '—'} · {formatDate(tx.date, locale)}
             {tx.ai_suggested_category && <span style={{ color: 'var(--purple)', marginLeft: 4 }}>AI</span>}
           </div>
         </div>
@@ -174,7 +175,7 @@ export default function TransactionsPage() {
                   <td>
                     {tx.category_name ? (
                       <span className="badge" style={{ background: `${tx.category_color}22`, color: tx.category_color }}>
-                        {tx.category_name}
+                        {translateCategory(tx.category_name, lang)}
                       </span>
                     ) : '—'}
                   </td>

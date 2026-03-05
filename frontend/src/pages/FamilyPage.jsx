@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatDate } from '../utils/format';
+import { translateCategory } from '../translations';
 import { Users, Plus, LogOut, Copy, Check, Receipt, PieChart, ArrowRightLeft, ChevronDown, ChevronUp, CheckCircle, Clock, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
 import MonthNavigator from '../components/ui/MonthNavigator';
 
 export default function FamilyPage() {
   const { user } = useAuth();
-  const { t, locale } = useLanguage();
+  const { t, locale, lang } = useLanguage();
   const qc = useQueryClient();
   const [mode, setMode] = useState(null);
   const [familyName, setFamilyName] = useState('');
@@ -281,7 +282,7 @@ export default function FamilyPage() {
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < family.topCategories.length - 1 ? '1px solid var(--border)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 10, height: 10, borderRadius: '50%', background: cat.color || 'var(--accent)' }} />
-                    <span style={{ fontSize: 14 }}>{cat.name || 'Uncategorized'}</span>
+                    <span style={{ fontSize: 14 }}>{translateCategory(cat.name, lang) || 'Uncategorized'}</span>
                   </div>
                   <span style={{ fontFamily: 'DM Mono', fontWeight: 600, fontSize: 14, color: 'var(--red)' }}>
                     {formatCurrency(cat.total, user?.currency, locale)}
@@ -370,7 +371,7 @@ export default function FamilyPage() {
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{exp.description}</div>
                         <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                          {t('family.paid_by') || 'Paid by'} {exp.created_by_name} · {new Date(exp.date).toLocaleDateString(locale)}
+                          {t('family.paid_by') || 'Paid by'} {exp.created_by_name} · {formatDate(exp.date, locale)}
                         </div>
                       </div>
                     </div>

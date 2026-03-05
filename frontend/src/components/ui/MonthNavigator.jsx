@@ -1,10 +1,11 @@
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { getMonthName } from '../../utils/format';
 
 export default function MonthNavigator({ month, year, onChange }) {
   const { locale, t } = useLanguage();
 
-  const monthName = new Date(year, month - 1).toLocaleString(locale, { month: 'long' });
+  const monthName = getMonthName(month, locale);
 
   const prev = () => {
     if (month === 1) onChange(12, year - 1);
