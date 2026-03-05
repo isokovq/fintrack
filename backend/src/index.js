@@ -88,6 +88,7 @@ async function seedDefaultCategories() {
     { name: 'Sports & Nutrition', type: 'expense', icon: 'dumbbell', color: '#f97316' },
     { name: 'Baby Expenses', type: 'expense', icon: 'baby', color: '#f472b6' },
     { name: 'Presents', type: 'expense', icon: 'gift', color: '#f59e0b' },
+    { name: 'Gifts', type: 'expense', icon: 'gift', color: '#e879f9' },
     { name: 'Wife Expenses', type: 'expense', icon: 'heart', color: '#e879f9' },
     { name: 'Extended Family', type: 'expense', icon: 'users', color: '#fb923c' },
     { name: 'Work Expenses', type: 'expense', icon: 'briefcase', color: '#64748b' },
