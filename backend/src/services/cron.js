@@ -60,6 +60,59 @@ function startCronJobs() {
     }
   });
 
+  // Daily recurring transaction auto-creation (runs at 2am)
+  cron.schedule('0 2 * * *', async () => {
+    try {
+      // Find all recurring transactions where next payment is due
+      const recurring = await db.query(`
+        SELECT DISTINCT ON (description, category_id, amount, recurring_interval)
+          id, user_id, account_id, category_id, type, amount, description,
+          recurring_interval, date
+        FROM transactions
+        WHERE is_recurring = true
+        ORDER BY description, category_id, amount, recurring_interval, date DESC
+      `);
+
+      const today = new Date().toISOString().split('T')[0];
+      let created = 0;
+
+      for (const tx of recurring.rows) {
+        const lastDate = new Date(tx.date);
+        let nextDate = new Date(lastDate);
+
+        switch (tx.recurring_interval) {
+          case 'daily': nextDate.setDate(nextDate.getDate() + 1); break;
+          case 'weekly': nextDate.setDate(nextDate.getDate() + 7); break;
+          case 'monthly': nextDate.setMonth(nextDate.getMonth() + 1); break;
+          case 'yearly': nextDate.setFullYear(nextDate.getFullYear() + 1); break;
+          default: nextDate.setMonth(nextDate.getMonth() + 1);
+        }
+
+        const nextStr = nextDate.toISOString().split('T')[0];
+        if (nextStr <= today) {
+          // Create the new transaction
+          await db.query(
+            `INSERT INTO transactions(user_id, account_id, category_id, type, amount, description, date, is_recurring, recurring_interval)
+             VALUES($1,$2,$3,$4,$5,$6,$7,true,$8)`,
+            [tx.user_id, tx.account_id, tx.category_id, tx.type, tx.amount, tx.description, nextStr, tx.recurring_interval]
+          );
+
+          // Update account balance
+          if (tx.account_id) {
+            const change = tx.type === 'income' ? tx.amount : -tx.amount;
+            await db.query('UPDATE accounts SET balance = balance + $1 WHERE id=$2', [change, tx.account_id]);
+          }
+
+          created++;
+        }
+      }
+
+      if (created > 0) console.log(`Cron: Created ${created} recurring transactions`);
+    } catch (err) {
+      console.error('Cron recurring error:', err.message);
+    }
+  });
+
   console.log('✅ Cron jobs started');
 }
 

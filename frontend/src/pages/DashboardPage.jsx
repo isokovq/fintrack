@@ -14,6 +14,7 @@ import {
 import { SkeletonStatCard, SkeletonCard, SkeletonTxItem } from '../components/ui/Skeleton';
 import Onboarding from '../components/ui/Onboarding';
 import MonthNavigator from '../components/ui/MonthNavigator';
+import AnimatedNumber from '../components/ui/AnimatedNumber';
 
 const DONUT_COLORS = ['#1a56db', '#059669', '#dc2626', '#d97706', '#7c3aed', '#06b6d4', '#ec4899', '#f97316'];
 
@@ -159,7 +160,7 @@ export default function DashboardPage() {
               <div className="stat-label">{t('dash.total_balance')}</div>
               <div className="stat-icon" style={{ background: 'var(--accent-glow)' }}><Wallet size={16} color="var(--accent)" /></div>
             </div>
-            <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(totalBalance, 'UZS', locale)}</div>
+            <AnimatedNumber value={totalBalance} duration={1200} format={n => formatCurrency(n, 'UZS', locale)} className="stat-value" style={{ color: 'var(--accent)' }} />
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{accounts.length} {accounts.length !== 1 ? t('dash.accounts_count_plural') : t('dash.accounts_count')}</div>
           </div>
           <div className="stat-card">
@@ -167,7 +168,7 @@ export default function DashboardPage() {
               <div className="stat-label">{t('dash.monthly_income')}</div>
               <div className="stat-icon" style={{ background: 'var(--green-bg)' }}><TrendingUp size={16} color="var(--green)" /></div>
             </div>
-            <div className="stat-value" style={{ color: 'var(--green)' }}>{formatCurrency(income, user?.currency, locale)}</div>
+            <AnimatedNumber value={income} duration={1000} format={n => formatCurrency(n, user?.currency, locale)} className="stat-value" style={{ color: 'var(--green)' }} />
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.income_count || 0} {t('dash.transactions_count')}</div>
           </div>
           <div className="stat-card">
@@ -175,7 +176,7 @@ export default function DashboardPage() {
               <div className="stat-label">{t('dash.monthly_expenses')}</div>
               <div className="stat-icon" style={{ background: 'var(--red-bg)' }}><TrendingDown size={16} color="var(--red)" /></div>
             </div>
-            <div className="stat-value" style={{ color: 'var(--red)' }}>{formatCurrency(expense, user?.currency, locale)}</div>
+            <AnimatedNumber value={expense} duration={1000} format={n => formatCurrency(n, user?.currency, locale)} className="stat-value" style={{ color: 'var(--red)' }} />
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{statsData?.summary?.expense_count || 0} {t('dash.transactions_count')}</div>
           </div>
           <div className="stat-card">
@@ -185,7 +186,7 @@ export default function DashboardPage() {
                 {saved >= 0 ? <TrendingUp size={16} color="var(--green)" /> : <TrendingDown size={16} color="var(--red)" />}
               </div>
             </div>
-            <div className="stat-value" style={{ color: saved >= 0 ? 'var(--green)' : 'var(--red)' }}>{formatCurrency(Math.abs(saved), user?.currency, locale)}</div>
+            <AnimatedNumber value={Math.abs(saved)} duration={1000} format={n => formatCurrency(n, user?.currency, locale)} className="stat-value" style={{ color: saved >= 0 ? 'var(--green)' : 'var(--red)' }} />
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{income > 0 ? `${savingsRate}% ${t('dash.savings_rate')}` : t('dash.no_income')}</div>
           </div>
         </div>

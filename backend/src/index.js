@@ -23,6 +23,8 @@ app.use('/api/family', require('./routes/family'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/exchange-rates', require('./routes/exchangeRates'));
+app.use('/api/reports', require('./routes/reports'));
+app.use('/api/recurring', require('./routes/recurring'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 

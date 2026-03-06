@@ -81,6 +81,8 @@ export default function Layout() {
     { to: '/calendar', label: t('nav.calendar'), icon: Calendar },
     { to: '/family', label: t('nav.family'), icon: Users },
     { to: '/ai', label: t('nav.ai'), icon: Sparkles },
+    { to: '/reports', label: t('nav.reports'), icon: BarChart3 },
+    { to: '/subscriptions', label: t('nav.subscriptions'), icon: Repeat2 },
   ];
 
   const isHome = location.pathname === '/';
