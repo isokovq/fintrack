@@ -78,3 +78,5 @@ fintrack/
 ## Author
 
 **Team Defolt** — [github.com/isokovq](https://github.com/isokovq)
+
+https://fintrack-production-d506.up.railway.app/
