@@ -43,8 +43,6 @@ A full-stack personal finance management application built with React, Node.js, 
 | AI | Anthropic Claude API |
 | Deployment | Docker, Railway |
 
-
-
 ## Project Structure
 
 ```
