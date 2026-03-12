@@ -161,19 +161,31 @@ export default function TransfersPage() {
               <button className="btn-icon" onClick={closeModal}><X size={16} /></button>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">{t('transfers.from_account')}</label>
-                <select className="form-control" value={form.from_account_id} onChange={set('from_account_id')} required>
-                  <option value="">{t('transfers.select_source')}</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency, locale)})</option>)}
-                </select>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label className="form-label">{t('transfers.from_account')}</label>
+                  <select className="form-control" value={form.from_account_id} onChange={set('from_account_id')} required>
+                    <option value="">{t('transfers.select_source')}</option>
+                    {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency, locale)})</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">{t('transfers.currency')}</label>
+                  <input className="form-control" value={fromAcc ? fromAcc.currency : '—'} disabled style={{ textAlign: 'center', fontWeight: 600, background: 'var(--bg-secondary)' }} />
+                </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">{t('transfers.to_account')}</label>
-                <select className="form-control" value={form.to_account_id} onChange={set('to_account_id')} required>
-                  <option value="">{t('transfers.select_dest')}</option>
-                  {accounts.filter(a => a.id !== form.from_account_id).map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency, locale)})</option>)}
-                </select>
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label className="form-label">{t('transfers.to_account')}</label>
+                  <select className="form-control" value={form.to_account_id} onChange={set('to_account_id')} required>
+                    <option value="">{t('transfers.select_dest')}</option>
+                    {accounts.filter(a => a.id !== form.from_account_id).map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency, locale)})</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">{t('transfers.currency')}</label>
+                  <input className="form-control" value={toAcc ? toAcc.currency : '—'} disabled style={{ textAlign: 'center', fontWeight: 600, background: 'var(--bg-secondary)' }} />
+                </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
