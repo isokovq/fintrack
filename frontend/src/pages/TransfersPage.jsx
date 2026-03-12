@@ -4,15 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
-import { Plus, X, ArrowRight, ArrowLeftRight } from 'lucide-react';
+import { Plus, X, ArrowRight, ArrowLeftRight, Pencil, Trash2 } from 'lucide-react';
 import CurrencyConverter from '../components/ui/CurrencyConverter';
+
+const emptyForm = { from_account_id: '', to_account_id: '', amount: '', exchange_rate: '1', description: '', date: new Date().toISOString().split('T')[0] };
 
 export default function TransfersPage() {
   const { user } = useAuth();
   const { t, locale } = useLanguage();
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ from_account_id: '', to_account_id: '', amount: '', exchange_rate: '1', description: '', date: new Date().toISOString().split('T')[0] });
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({ ...emptyForm });
 
   const { data: accounts = [] } = useQuery({ queryKey: ['accounts'], queryFn: () => api.get('/accounts').then(r => r.data) });
   const { data: transfers = [] } = useQuery({ queryKey: ['transfers'], queryFn: () => api.get('/transfers').then(r => r.data) });
@@ -21,16 +24,62 @@ export default function TransfersPage() {
   const toAcc = accounts.find(a => a.id === form.to_account_id);
   const differentCurrency = fromAcc && toAcc && fromAcc.currency !== toAcc.currency;
 
-  const mutation = useMutation({
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['transfers'] });
+    qc.invalidateQueries({ queryKey: ['accounts'] });
+  };
+
+  const createMutation = useMutation({
     mutationFn: (data) => api.post('/transfers', data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['transfers'] });
-      qc.invalidateQueries({ queryKey: ['accounts'] });
-      setShowModal(false);
-      setForm({ from_account_id: '', to_account_id: '', amount: '', exchange_rate: '1', description: '', date: new Date().toISOString().split('T')[0] });
-    }
+    onSuccess: () => { invalidate(); closeModal(); }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }) => api.put(`/transfers/${id}`, data),
+    onSuccess: () => { invalidate(); closeModal(); }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/transfers/${id}`),
+    onSuccess: invalidate
+  });
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setForm({ ...emptyForm });
+  };
+
+  const openEdit = (tr) => {
+    setEditingId(tr.id);
+    setForm({
+      from_account_id: tr.from_account_id,
+      to_account_id: tr.to_account_id,
+      amount: String(tr.amount),
+      exchange_rate: String(tr.exchange_rate || 1),
+      description: tr.description || '',
+      date: tr.date ? tr.date.split('T')[0] : new Date().toISOString().split('T')[0]
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = (tr) => {
+    if (window.confirm(t('common.confirm_delete'))) {
+      deleteMutation.mutate(tr.id);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const payload = { ...form, amount: parseFloat(form.amount), exchange_rate: parseFloat(form.exchange_rate) };
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, ...payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
@@ -40,7 +89,7 @@ export default function TransfersPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('transfers.title')}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('transfers.subtitle')}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={() => { setEditingId(null); setForm({ ...emptyForm }); setShowModal(true); }}>
           <Plus size={15} /> {t('transfers.add')}
         </button>
       </div>
@@ -61,6 +110,7 @@ export default function TransfersPage() {
                   <th>{t('transfers.to')}</th>
                   <th>{t('transfers.amount')}</th>
                   <th>{t('transfers.date')}</th>
+                  <th style={{ width: 80 }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -82,6 +132,16 @@ export default function TransfersPage() {
                       )}
                     </td>
                     <td style={{ color: 'var(--text-secondary)' }}>{formatDate(tr.date, locale)}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button className="btn-icon" onClick={() => openEdit(tr)} title={t('common.edit')} style={{ color: 'var(--text-secondary)' }}>
+                          <Pencil size={14} />
+                        </button>
+                        <button className="btn-icon" onClick={() => handleDelete(tr)} title={t('common.delete')} style={{ color: 'var(--danger)' }}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -94,13 +154,13 @@ export default function TransfersPage() {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && closeModal()}>
           <div className="modal">
             <div className="modal-header">
-              <h2>{t('transfers.add_title')}</h2>
-              <button className="btn-icon" onClick={() => setShowModal(false)}><X size={16} /></button>
+              <h2>{editingId ? t('transfers.edit_title') : t('transfers.add_title')}</h2>
+              <button className="btn-icon" onClick={closeModal}><X size={16} /></button>
             </div>
-            <form onSubmit={e => { e.preventDefault(); mutation.mutate({ ...form, amount: parseFloat(form.amount), exchange_rate: parseFloat(form.exchange_rate) }); }}>
+            <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">{t('transfers.from_account')}</label>
                 <select className="form-control" value={form.from_account_id} onChange={set('from_account_id')} required>
@@ -146,9 +206,9 @@ export default function TransfersPage() {
                 </div>
               )}
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
-                <button type="submit" className="btn btn-primary" disabled={mutation.isPending} style={{ flex: 2, justifyContent: 'center' }}>
-                  {mutation.isPending ? t('transfers.processing') : t('transfers.transfer')}
+                <button type="button" className="btn btn-ghost" onClick={closeModal} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
+                <button type="submit" className="btn btn-primary" disabled={isPending} style={{ flex: 2, justifyContent: 'center' }}>
+                  {isPending ? t('transfers.processing') : (editingId ? t('common.save') : t('transfers.transfer'))}
                 </button>
               </div>
             </form>
