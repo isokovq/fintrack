@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatShortDate, formatLocalDate } from '../utils/format';
 import { translateCategory } from '../translations';
-import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard, PieChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Plus, ArrowRight, Sparkles, CreditCard, PieChart, Target, ArrowUpRight, ArrowDownRight, Equal } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart as RPieChart, Pie, Cell
@@ -62,6 +62,22 @@ export default function DashboardPage() {
     retry: 1
   });
 
+  // Previous month stats for comparison
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+  const { data: prevStatsData } = useQuery({
+    queryKey: ['stats', 'month', prevMonth, prevYear],
+    queryFn: () => api.get(`/transactions/stats/summary?period=month&year=${prevYear}&month=${prevMonth}`).then(r => r.data),
+    retry: 1
+  });
+
+  // Goals for dashboard widget
+  const { data: goalsData = [] } = useQuery({
+    queryKey: ['goals'],
+    queryFn: () => api.get('/goals').then(r => r.data),
+    retry: 1
+  });
+
   const { data: aiInsights = [] } = useQuery({
     queryKey: ['ai-insights', lang],
     queryFn: () => api.get('/ai/insights?lang=' + lang).then(r => r.data),
@@ -93,6 +109,25 @@ export default function DashboardPage() {
   const expense = parseFloat(statsData?.summary?.total_expense || 0);
   const saved = income - expense;
   const savingsRate = income > 0 ? Math.round((saved / income) * 100) : 0;
+
+  // Month-over-month comparison
+  const prevIncome = parseFloat(prevStatsData?.summary?.total_income || 0);
+  const prevExpense = parseFloat(prevStatsData?.summary?.total_expense || 0);
+  const incomeChange = prevIncome > 0 ? Math.round(((income - prevIncome) / prevIncome) * 100) : 0;
+  const expenseChange = prevExpense > 0 ? Math.round(((expense - prevExpense) / prevExpense) * 100) : 0;
+
+  // Smart insights from data
+  const topCategory = (statsData?.byCategory || [])
+    .filter(c => c.type === 'expense' && parseFloat(c.total) > 0)
+    .sort((a, b) => parseFloat(b.total) - parseFloat(a.total))[0];
+
+  const topGoal = goalsData.length > 0
+    ? goalsData.reduce((best, g) => {
+        const pct = parseFloat(g.target_amount) > 0 ? parseFloat(g.current_amount) / parseFloat(g.target_amount) : 0;
+        const bestPct = parseFloat(best.target_amount) > 0 ? parseFloat(best.current_amount) / parseFloat(best.target_amount) : 0;
+        return pct > bestPct ? g : best;
+      }, goalsData[0])
+    : null;
 
   const trendFormatted = trendData.map(d => {
     const monthNum = parseInt(d.month?.substring(5), 10);
@@ -287,6 +322,129 @@ export default function DashboardPage() {
             <Link to="/ai" className="btn btn-ghost btn-sm" style={{ marginTop: 12 }}>{t('dash.chat_ai')}</Link>
           </div>
         )}
+      </div>
+
+      {/* Monthly Comparison + Goals Quick View */}
+      <div className="grid-2" style={{ marginBottom: 24 }}>
+        {/* Month-over-Month Comparison */}
+        <div className="card">
+          <div className="card-header">
+            <h3 style={{ fontSize: 14, fontWeight: 700 }}>{t('dash.month_comparison') || 'vs Last Month'}</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--green-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingUp size={14} color="var(--green)" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('dash.income')}</div>
+                  <div style={{ fontFamily: 'DM Mono', fontWeight: 700, fontSize: 14 }}>{formatCurrency(income, user?.currency, locale)}</div>
+                </div>
+              </div>
+              {prevIncome > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 700,
+                  color: incomeChange >= 0 ? 'var(--green)' : 'var(--red)',
+                  background: incomeChange >= 0 ? 'var(--green-bg)' : 'var(--red-bg)',
+                  padding: '3px 8px', borderRadius: 6
+                }}>
+                  {incomeChange >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                  {Math.abs(incomeChange)}%
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--red-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingDown size={14} color="var(--red)" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('dash.expense')}</div>
+                  <div style={{ fontFamily: 'DM Mono', fontWeight: 700, fontSize: 14 }}>{formatCurrency(expense, user?.currency, locale)}</div>
+                </div>
+              </div>
+              {prevExpense > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 700,
+                  color: expenseChange <= 0 ? 'var(--green)' : 'var(--red)',
+                  background: expenseChange <= 0 ? 'var(--green-bg)' : 'var(--red-bg)',
+                  padding: '3px 8px', borderRadius: 6
+                }}>
+                  {expenseChange > 0 ? <ArrowUpRight size={12} /> : expenseChange < 0 ? <ArrowDownRight size={12} /> : <Equal size={12} />}
+                  {Math.abs(expenseChange)}%
+                </div>
+              )}
+            </div>
+            {topCategory && (
+              <div style={{ padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 12 }}>
+                <span style={{ color: 'var(--text-muted)' }}>{t('dash.top_category') || 'Top spending'}: </span>
+                <span style={{ fontWeight: 700, color: topCategory.color || 'var(--text-primary)' }}>
+                  {translateCategory(topCategory.name, lang)}
+                </span>
+                <span style={{ fontFamily: 'DM Mono', fontWeight: 600, marginLeft: 6 }}>
+                  {formatCurrency(topCategory.total, user?.currency, locale)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Goals Quick View */}
+        <div className="card">
+          <div className="card-header">
+            <h3 style={{ fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Target size={14} color="var(--accent)" /> {t('dash.savings_goals') || 'Savings Goals'}
+            </h3>
+            <Link to="/goals" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+              {t('dash.view_all')} <ArrowRight size={12} />
+            </Link>
+          </div>
+          {goalsData.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {goalsData.slice(0, 3).map(goal => {
+                const pct = parseFloat(goal.target_amount) > 0
+                  ? Math.round((parseFloat(goal.current_amount) / parseFloat(goal.target_amount)) * 100) : 0;
+                const isComplete = pct >= 100;
+                return (
+                  <div key={goal.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: `${goal.color || '#4f46e5'}15`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 800, fontFamily: 'DM Mono',
+                      color: isComplete ? 'var(--green)' : (goal.color || 'var(--accent)')
+                    }}>
+                      {pct}%
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {goal.name}
+                      </div>
+                      <div style={{ height: 4, background: 'var(--bg-elevated)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%', width: `${Math.min(pct, 100)}%`, borderRadius: 2,
+                          background: isComplete ? 'var(--green)' : (goal.color || 'var(--accent)'),
+                          transition: 'width 0.8s ease'
+                        }} />
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'DM Mono', whiteSpace: 'nowrap' }}>
+                      {formatCurrency(goal.current_amount, user?.currency, locale)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p>{t('dash.no_goals') || 'Set savings goals to track progress'}</p>
+              <Link to="/goals" className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
+                <Plus size={13} /> {t('goals.add') || 'Add Goal'}
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid-2">

@@ -8,7 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, PieChart,
   Users, Calendar, Sparkles, Bell, LogOut, HandCoins, Repeat2,
-  Menu, X, ChevronLeft, BarChart3, Sun, Moon, TrendingUp
+  Menu, X, ChevronLeft, BarChart3, Sun, Moon, TrendingUp, Target
 } from 'lucide-react';
 
 const FLAG_SVG = {
@@ -94,6 +94,7 @@ export default function Layout() {
     { to: '/family', label: t('nav.family'), icon: Users },
     { to: '/ai', label: t('nav.ai'), icon: Sparkles },
     { to: '/reports', label: t('nav.reports'), icon: BarChart3 },
+    { to: '/goals', label: t('nav.goals'), icon: Target },
     { to: '/subscriptions', label: t('nav.subscriptions'), icon: Repeat2 },
   ];
 

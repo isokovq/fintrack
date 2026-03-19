@@ -17,6 +17,7 @@ import TransfersPage from './pages/TransfersPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ReportsPage from './pages/ReportsPage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
+import GoalsPage from './pages/GoalsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="ai" element={<AIPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="goals" element={<GoalsPage />} />
               <Route path="subscriptions" element={<SubscriptionsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
             </Route>

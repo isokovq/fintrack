@@ -25,6 +25,7 @@ app.use('/api/ai', require('./routes/ai'));
 app.use('/api/exchange-rates', require('./routes/exchangeRates'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/recurring', require('./routes/recurring'));
+app.use('/api/goals', require('./routes/goals'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
