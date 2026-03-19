@@ -94,6 +94,8 @@ async function seedDefaultCategories() {
     { name: 'Wife Expenses', type: 'expense', icon: 'heart', color: '#e879f9' },
     { name: 'Extended Family', type: 'expense', icon: 'users', color: '#fb923c' },
     { name: 'Work Expenses', type: 'expense', icon: 'briefcase', color: '#64748b' },
+    { name: 'Personal Expenses', type: 'expense', icon: 'user', color: '#6366f1' },
+    { name: 'Charity', type: 'expense', icon: 'heart-handshake', color: '#10b981' },
     { name: 'Other Expense', type: 'expense', icon: 'more-horizontal', color: '#6b7280' },
     { name: 'Salary', type: 'income', icon: 'briefcase', color: '#22c55e' },
     { name: 'Freelance', type: 'income', icon: 'laptop', color: '#10b981' },

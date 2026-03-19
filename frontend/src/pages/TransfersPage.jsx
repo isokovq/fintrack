@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
-import { Plus, X, ArrowRight, ArrowLeftRight, Pencil, Trash2 } from 'lucide-react';
+import { Plus, X, ArrowRight, ArrowLeftRight, ArrowDown, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import CurrencyConverter from '../components/ui/CurrencyConverter';
 
-const emptyForm = { from_account_id: '', to_account_id: '', amount: '', exchange_rate: '1', description: '', date: new Date().toISOString().split('T')[0] };
+const emptyForm = { from_account_id: '', to_account_id: '', amount: '', receive_amount: '', exchange_rate: '1', description: '', date: new Date().toISOString().split('T')[0] };
 
 export default function TransfersPage() {
   const { user } = useAuth();
@@ -19,10 +19,39 @@ export default function TransfersPage() {
 
   const { data: accounts = [] } = useQuery({ queryKey: ['accounts'], queryFn: () => api.get('/accounts').then(r => r.data) });
   const { data: transfers = [] } = useQuery({ queryKey: ['transfers'], queryFn: () => api.get('/transfers').then(r => r.data) });
+  const { data: ratesData } = useQuery({ queryKey: ['exchange-rates'], queryFn: () => api.get('/exchange-rates').then(r => r.data) });
+
+  const rates = ratesData?.rates || {};
 
   const fromAcc = accounts.find(a => a.id === form.from_account_id);
   const toAcc = accounts.find(a => a.id === form.to_account_id);
   const differentCurrency = fromAcc && toAcc && fromAcc.currency !== toAcc.currency;
+
+  // Calculate CBU rate between two currencies (through UZS as base)
+  const cbuRate = useMemo(() => {
+    if (!fromAcc || !toAcc || !differentCurrency) return 1;
+    const fromCcy = fromAcc.currency;
+    const toCcy = toAcc.currency;
+    // rates are: 1 unit of currency = X UZS
+    const fromToUZS = fromCcy === 'UZS' ? 1 : (rates[fromCcy] || 1);
+    const toToUZS = toCcy === 'UZS' ? 1 : (rates[toCcy] || 1);
+    return fromToUZS / toToUZS;
+  }, [fromAcc, toAcc, differentCurrency, rates]);
+
+  // Auto-fill exchange rate from CBU when accounts change
+  useEffect(() => {
+    if (differentCurrency && cbuRate) {
+      const rateStr = cbuRate.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+      setForm(f => {
+        const newForm = { ...f, exchange_rate: rateStr };
+        // Recalculate receive amount if send amount exists
+        if (f.amount) {
+          newForm.receive_amount = (parseFloat(f.amount) * parseFloat(rateStr)).toFixed(2);
+        }
+        return newForm;
+      });
+    }
+  }, [differentCurrency, cbuRate]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['transfers'] });
@@ -52,10 +81,13 @@ export default function TransfersPage() {
 
   const openEdit = (tr) => {
     setEditingId(tr.id);
+    const rate = parseFloat(tr.exchange_rate || 1);
+    const amt = parseFloat(tr.amount || 0);
     setForm({
       from_account_id: tr.from_account_id,
       to_account_id: tr.to_account_id,
       amount: String(tr.amount),
+      receive_amount: (amt * rate).toFixed(2),
       exchange_rate: String(tr.exchange_rate || 1),
       description: tr.description || '',
       date: tr.date ? tr.date.split('T')[0] : new Date().toISOString().split('T')[0]
@@ -69,9 +101,42 @@ export default function TransfersPage() {
     }
   };
 
+  // When user types in "send" amount → calculate receive
+  const onSendAmountChange = (e) => {
+    const val = e.target.value;
+    const rate = parseFloat(form.exchange_rate) || 1;
+    const receiveAmt = val ? (parseFloat(val) * rate).toFixed(2) : '';
+    setForm(f => ({ ...f, amount: val, receive_amount: receiveAmt }));
+  };
+
+  // When user types in "receive" amount → calculate send
+  const onReceiveAmountChange = (e) => {
+    const val = e.target.value;
+    const rate = parseFloat(form.exchange_rate) || 1;
+    const sendAmt = val && rate ? (parseFloat(val) / rate).toFixed(2) : '';
+    setForm(f => ({ ...f, receive_amount: val, amount: sendAmt }));
+  };
+
+  // When user manually edits exchange rate → recalculate receive from send
+  const onRateChange = (e) => {
+    const val = e.target.value;
+    const sendAmt = parseFloat(form.amount) || 0;
+    const receiveAmt = sendAmt && val ? (sendAmt * parseFloat(val)).toFixed(2) : form.receive_amount;
+    setForm(f => ({ ...f, exchange_rate: val, receive_amount: receiveAmt }));
+  };
+
+  // Reset rate to CBU
+  const resetToCbuRate = () => {
+    const rateStr = cbuRate.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+    const sendAmt = parseFloat(form.amount) || 0;
+    const receiveAmt = sendAmt ? (sendAmt * parseFloat(rateStr)).toFixed(2) : '';
+    setForm(f => ({ ...f, exchange_rate: rateStr, receive_amount: receiveAmt }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const payload = { ...form, amount: parseFloat(form.amount), exchange_rate: parseFloat(form.exchange_rate) };
+    delete payload.receive_amount;
     if (editingId) {
       updateMutation.mutate({ id: editingId, ...payload });
     } else {
@@ -128,7 +193,9 @@ export default function TransfersPage() {
                     <td style={{ fontFamily: 'DM Mono', fontWeight: 600 }}>
                       {formatCurrency(tr.amount, tr.from_currency, locale)}
                       {tr.exchange_rate !== 1 && tr.exchange_rate !== '1' && (
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('transfers.exchange_rate')}: {tr.exchange_rate}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          → {formatCurrency(parseFloat(tr.amount) * parseFloat(tr.exchange_rate), tr.to_currency, locale)}
+                        </div>
                       )}
                     </td>
                     <td style={{ color: 'var(--text-secondary)' }}>{formatDate(tr.date, locale)}</td>
@@ -149,7 +216,6 @@ export default function TransfersPage() {
           )}
         </div>
 
-        {/* Currency Converter Widget */}
         <CurrencyConverter />
       </div>
 
@@ -161,6 +227,7 @@ export default function TransfersPage() {
               <button className="btn-icon" onClick={closeModal}><X size={16} /></button>
             </div>
             <form onSubmit={handleSubmit}>
+              {/* From account */}
               <div className="form-row">
                 <div className="form-group" style={{ flex: 2 }}>
                   <label className="form-label">{t('transfers.from_account')}</label>
@@ -174,6 +241,8 @@ export default function TransfersPage() {
                   <input className="form-control" value={fromAcc ? fromAcc.currency : '—'} disabled style={{ textAlign: 'center', fontWeight: 600, background: 'var(--bg-secondary)' }} />
                 </div>
               </div>
+
+              {/* To account */}
               <div className="form-row">
                 <div className="form-group" style={{ flex: 2 }}>
                   <label className="form-label">{t('transfers.to_account')}</label>
@@ -187,21 +256,46 @@ export default function TransfersPage() {
                   <input className="form-control" value={toAcc ? toAcc.currency : '—'} disabled style={{ textAlign: 'center', fontWeight: 600, background: 'var(--bg-secondary)' }} />
                 </div>
               </div>
-              <div className="form-row">
+
+              {/* Amount section */}
+              {differentCurrency ? (
+                <>
+                  {/* Send amount in FROM currency */}
+                  <div className="form-group">
+                    <label className="form-label">{t('transfers.you_send')} ({fromAcc.currency})</label>
+                    <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount} onChange={onSendAmountChange} required />
+                  </div>
+
+                  {/* Exchange rate display */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 12px', padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>
+                    <ArrowDown size={14} color="var(--text-muted)" />
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', flex: 1 }}>
+                      1 {fromAcc.currency} = <input
+                        type="number"
+                        step="0.000001"
+                        value={form.exchange_rate}
+                        onChange={onRateChange}
+                        style={{ width: 90, border: 'none', background: 'transparent', fontWeight: 600, fontSize: 12, color: 'var(--text-primary)', outline: 'none', textAlign: 'center', padding: '2px 4px', borderBottom: '1px dashed var(--text-muted)' }}
+                      /> {toAcc.currency}
+                    </span>
+                    <button type="button" onClick={resetToCbuRate} title={t('transfers.cbu_rate')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11 }}>
+                      <RefreshCw size={12} /> CBU
+                    </button>
+                  </div>
+
+                  {/* Receive amount in TO currency */}
+                  <div className="form-group">
+                    <label className="form-label">{t('transfers.they_receive')} ({toAcc.currency})</label>
+                    <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={form.receive_amount} onChange={onReceiveAmountChange} />
+                  </div>
+                </>
+              ) : (
                 <div className="form-group">
                   <label className="form-label">{t('transfers.amount')}</label>
                   <input className="form-control" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount} onChange={set('amount')} required />
                 </div>
-                {differentCurrency && (
-                  <div className="form-group">
-                    <label className="form-label">{t('transfers.exchange_rate')}</label>
-                    <input className="form-control" type="number" step="0.000001" placeholder="1.0" value={form.exchange_rate} onChange={set('exchange_rate')} />
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                      1 {fromAcc.currency} = {form.exchange_rate} {toAcc.currency}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
+
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">{t('transfers.date')}</label>
@@ -212,11 +306,7 @@ export default function TransfersPage() {
                   <input className="form-control" placeholder={t('transfers.what_for')} value={form.description} onChange={set('description')} />
                 </div>
               </div>
-              {differentCurrency && form.amount && (
-                <div className="alert alert-info" style={{ marginBottom: 16 }}>
-                  {t('transfers.receive')} {formatCurrency(parseFloat(form.amount) * parseFloat(form.exchange_rate || 1), toAcc.currency, locale)}
-                </div>
-              )}
+
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn btn-ghost" onClick={closeModal} style={{ flex: 1, justifyContent: 'center' }}>{t('common.cancel')}</button>
                 <button type="submit" className="btn btn-primary" disabled={isPending} style={{ flex: 2, justifyContent: 'center' }}>
