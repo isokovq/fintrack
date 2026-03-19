@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { BarChart3, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, register } = useAuth();
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', currency: 'USD' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   const handle = async (e) => {
     e.preventDefault();
@@ -26,26 +28,26 @@ export default function LoginPage() {
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg-base)',
-    }}>
-      <div style={{ width: '100%', maxWidth: 400, padding: '0 20px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 48, height: 48, margin: '0 auto 16px',
-            background: 'var(--accent)', borderRadius: 12,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, color: 'white', fontWeight: 800, letterSpacing: '-0.5px',
-          }}>F</div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 4 }}>FinTrack</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{t('auth.tagline')}</p>
+    <div className="login-bg">
+      <div style={{ width: '100%', maxWidth: 420, padding: '0 20px', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div className="login-logo">
+            <BarChart3 size={26} />
+          </div>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 6, color: '#ffffff' }}>
+            FinTrack
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 15 }}>{t('auth.tagline')}</p>
         </div>
 
-        <div className="card" style={{ padding: 28 }}>
+        <div className="login-card">
           <div className="tabs" style={{ marginBottom: 24 }}>
-            <button className={`tab-btn ${mode === 'login' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('login')}>{t('auth.signin')}</button>
-            <button className={`tab-btn ${mode === 'register' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('register')}>{t('auth.create')}</button>
+            <button className={`tab-btn ${mode === 'login' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('login')}>
+              {t('auth.signin')}
+            </button>
+            <button className={`tab-btn ${mode === 'register' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setMode('register')}>
+              {t('auth.create')}
+            </button>
           </div>
 
           {error && <div className="alert alert-danger" style={{ marginBottom: 16 }}>{error}</div>}
@@ -63,7 +65,28 @@ export default function LoginPage() {
             </div>
             <div className="form-group">
               <label className="form-label">{t('auth.password')}</label>
-              <input className="form-control" type="password" placeholder={t('auth.password_placeholder')} value={form.password} onChange={set('password')} required />
+              <div style={{ position: 'relative' }}>
+                <input
+                  className="form-control"
+                  type={showPass ? 'text' : 'password'}
+                  placeholder={t('auth.password_placeholder')}
+                  value={form.password}
+                  onChange={set('password')}
+                  required
+                  style={{ paddingRight: 40 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  style={{
+                    position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
+                    display: 'flex', alignItems: 'center', padding: 4,
+                  }}
+                >
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             {mode === 'register' && (
               <div className="form-group">
@@ -78,11 +101,20 @@ export default function LoginPage() {
                 </select>
               </div>
             )}
-            <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '11px', fontSize: 14, marginTop: 8 }}>
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={loading}
+              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 14.5, marginTop: 8, fontWeight: 700 }}
+            >
               {loading ? t('common.loading') : mode === 'login' ? t('auth.signin') : t('auth.create')}
             </button>
           </form>
         </div>
+
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+          Secure & Private Finance Management
+        </p>
       </div>
     </div>
   );

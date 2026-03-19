@@ -8,7 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, PieChart,
   Users, Calendar, Sparkles, Bell, LogOut, HandCoins, Repeat2,
-  Menu, X, ChevronLeft, BarChart3, Sun, Moon
+  Menu, X, ChevronLeft, BarChart3, Sun, Moon, TrendingUp
 } from 'lucide-react';
 
 const FLAG_SVG = {
@@ -66,6 +66,18 @@ export default function Layout() {
     refetchInterval: 30000
   });
 
+  // Get current month stats for savings indicator
+  const now = new Date();
+  const { data: statsData } = useQuery({
+    queryKey: ['stats', 'month', now.getMonth() + 1, now.getFullYear()],
+    queryFn: () => api.get(`/transactions/stats/summary?period=month&year=${now.getFullYear()}&month=${now.getMonth() + 1}`).then(r => r.data),
+    staleTime: 60000
+  });
+
+  const income = parseFloat(statsData?.summary?.total_income || 0);
+  const expense = parseFloat(statsData?.summary?.total_expense || 0);
+  const savingsRate = income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
+
   useEffect(() => {
     setSidebarOpen(false);
     setLangOpen(false);
@@ -108,11 +120,9 @@ export default function Layout() {
         )}
         <span className="mobile-title">{pageTitle}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {/* Mobile theme toggle */}
           <button className="btn-icon mobile-menu-btn" onClick={toggleTheme} style={{ marginRight: -4 }}>
             {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          {/* Mobile language picker */}
           <div style={{ position: 'relative' }}>
             <button className="lang-toggle-mobile" onClick={() => setLangOpen(!langOpen)}>
               <Flag cc={currentLang.cc} size={18} />
@@ -147,7 +157,6 @@ export default function Layout() {
             <BarChart3 size={18} color="white" />
           </div>
           <span className="logo-text">FinTrack</span>
-          {/* X only shows on mobile via CSS */}
           <button className="btn-icon sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
             <X size={18} />
           </button>
@@ -162,6 +171,47 @@ export default function Layout() {
           ))}
         </nav>
 
+        {/* Savings indicator */}
+        {income > 0 && (
+          <div style={{ padding: '0 14px 12px' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.06)',
+              borderRadius: 10,
+              padding: '12px 14px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <TrendingUp size={12} color={savingsRate >= 0 ? '#34d399' : '#f87171'} />
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
+                    {t('dash.savings_rate') || 'Savings'}
+                  </span>
+                </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 700,
+                  color: savingsRate >= 20 ? '#34d399' : savingsRate >= 0 ? '#fbbf24' : '#f87171',
+                  fontFamily: 'DM Mono',
+                }}>
+                  {savingsRate}%
+                </span>
+              </div>
+              <div style={{
+                height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${Math.min(Math.max(savingsRate, 0), 100)}%`,
+                  borderRadius: 2,
+                  background: savingsRate >= 20 ? 'linear-gradient(90deg, #34d399, #10b981)' :
+                    savingsRate >= 0 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' :
+                    'linear-gradient(90deg, #f87171, #ef4444)',
+                  transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                }} />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="sidebar-footer">
           <button className="nav-item" onClick={() => navigate('/notifications')} style={{ width: '100%', marginBottom: 4 }}>
             <Bell size={16} />
@@ -172,15 +222,14 @@ export default function Layout() {
             <div className="user-avatar">{user?.name?.charAt(0).toUpperCase()}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{user?.currency}</div>
+              <div style={{ fontSize: 11 }}>{user?.currency}</div>
             </div>
-            <LogOut size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <LogOut size={14} style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
           </div>
         </div>
       </aside>
 
       <main className="main-content">
-        {/* Desktop top bar with language dropdown */}
         <div className="topbar">
           <div />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
