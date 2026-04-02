@@ -11,6 +11,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell
 } from 'recharts';
 import AnimatedNumber from '../components/ui/AnimatedNumber';
+import SpendingHeatmap from '../components/ui/SpendingHeatmap';
 
 const COLORS = ['#1a56db', '#059669', '#dc2626', '#d97706', '#7c3aed', '#06b6d4', '#ec4899', '#f97316'];
 
@@ -214,6 +215,9 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      {/* Spending Heatmap */}
+      <SpendingHeatmap year={year} />
     </div>
   );
 }

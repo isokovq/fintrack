@@ -26,6 +26,7 @@ app.use('/api/exchange-rates', require('./routes/exchangeRates'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/recurring', require('./routes/recurring'));
 app.use('/api/goals', require('./routes/goals'));
+app.use('/api/admin', require('./routes/admin'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
@@ -136,8 +137,40 @@ async function seedDefaultCategories() {
   }
 }
 
+// Seed admin account on startup
+async function seedAdminAccount() {
+  try {
+    const bcrypt = require('bcryptjs');
+    const adminEmail = 'isokovq@gmail.com';
+    const adminPassword = 'isokov@123';
+
+    const existing = await db.query('SELECT id, is_admin FROM users WHERE email=$1', [adminEmail]);
+    if (existing.rows.length) {
+      // Ensure existing account has admin privileges
+      if (!existing.rows[0].is_admin) {
+        await db.query('UPDATE users SET is_admin=true WHERE id=$1', [existing.rows[0].id]);
+        console.log('Admin privileges granted to existing account:', adminEmail);
+      }
+    } else {
+      const hash = await bcrypt.hash(adminPassword, 10);
+      const result = await db.query(
+        'INSERT INTO users(name, email, password_hash, currency, is_admin, plan) VALUES($1,$2,$3,$4,$5,$6) RETURNING id',
+        ['Admin', adminEmail, hash, 'USD', true, 'pro']
+      );
+      // Create default cash account for admin
+      await db.query(
+        'INSERT INTO accounts(user_id, name, type, currency, balance) VALUES($1,$2,$3,$4,$5)',
+        [result.rows[0].id, 'Cash', 'cash', 'USD', 0]
+      );
+      console.log('Admin account created:', adminEmail);
+    }
+  } catch (err) {
+    console.error('Admin seed error:', err.message);
+  }
+}
+
 const PORT = process.env.PORT || 5000;
-runMigrations().then(() => seedDefaultCategories()).then(() => {
+runMigrations().then(() => seedDefaultCategories()).then(() => seedAdminAccount()).then(() => {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`FinTrack running on port ${PORT}`);
     startCronJobs();

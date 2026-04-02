@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
-import { Send, Sparkles, RefreshCw } from 'lucide-react';
+import { Send, Sparkles, RefreshCw, Camera } from 'lucide-react';
+import ReceiptScanner from '../components/ui/ReceiptScanner';
 
 export default function AIPage() {
   const { t, lang } = useLanguage();
@@ -11,6 +12,7 @@ export default function AIPage() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const bottomRef = useRef(null);
 
   const { data: insights = [], refetch: refetchInsights, isFetching: insightsFetching } = useQuery({
@@ -57,7 +59,12 @@ export default function AIPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('ai.title')}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{t('ai.subtitle')}</p>
         </div>
+        <button className="btn btn-primary" onClick={() => setShowScanner(true)} style={{ gap: 6 }}>
+          <Camera size={15} /> {t('receipt.title') || 'Scan Receipt'}
+        </button>
       </div>
+
+      {showScanner && <ReceiptScanner onClose={() => setShowScanner(false)} />}
 
       <div className="grid-2" style={{ alignItems: 'start' }}>
         {/* Chat */}

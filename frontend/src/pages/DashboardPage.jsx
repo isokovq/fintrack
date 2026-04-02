@@ -15,6 +15,7 @@ import { SkeletonStatCard, SkeletonCard, SkeletonTxItem } from '../components/ui
 import Onboarding from '../components/ui/Onboarding';
 import MonthNavigator from '../components/ui/MonthNavigator';
 import AnimatedNumber from '../components/ui/AnimatedNumber';
+import HealthScoreGauge from '../components/ui/HealthScoreGauge';
 
 const DONUT_COLORS = ['#1a56db', '#059669', '#dc2626', '#d97706', '#7c3aed', '#06b6d4', '#ec4899', '#f97316'];
 
@@ -511,6 +512,11 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Financial Health Score */}
+      <div style={{ marginTop: 24 }}>
+        <HealthScoreGauge />
       </div>
     </div>
   );

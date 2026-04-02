@@ -310,4 +310,59 @@ async function checkBudgetAlerts(userId, categoryId, type) {
   }
 }
 
+// GET /api/transactions/export/csv — export all transactions as CSV
+router.get('/export/csv', auth, async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    let conditions = ['t.user_id=$1'];
+    let params = [req.user.id];
+    let i = 2;
+    if (start_date) { conditions.push(`t.date>=$${i++}`); params.push(start_date); }
+    if (end_date) { conditions.push(`t.date<=$${i++}`); params.push(end_date); }
+
+    const result = await db.query(
+      `SELECT t.date, t.type, t.amount, t.description,
+              c.name as category, a.name as account, a.currency
+       FROM transactions t
+       LEFT JOIN categories c ON c.id = t.category_id
+       LEFT JOIN accounts a ON a.id = t.account_id
+       WHERE ${conditions.join(' AND ')}
+       ORDER BY t.date DESC`,
+      params
+    );
+
+    const header = 'Date,Type,Amount,Currency,Description,Category,Account\n';
+    const rows = result.rows.map(r =>
+      `${r.date ? r.date.toISOString().split('T')[0] : ''},${r.type},${r.amount},"${r.currency || ''}","${(r.description || '').replace(/"/g, '""')}","${r.category || ''}","${r.account || ''}"`
+    ).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=fintrack-export.csv');
+    res.send(header + rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/transactions/stats/heatmap — daily spending for calendar heatmap
+router.get('/stats/heatmap', auth, async (req, res) => {
+  try {
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const result = await db.query(`
+      SELECT date::date as day,
+        SUM(CASE WHEN type='expense' THEN amount ELSE 0 END) as expense,
+        SUM(CASE WHEN type='income' THEN amount ELSE 0 END) as income,
+        COUNT(*) as count
+      FROM transactions
+      WHERE user_id=$1 AND EXTRACT(YEAR FROM date)=$2
+      GROUP BY date::date
+      ORDER BY day
+    `, [req.user.id, year]);
+
+    res.json({ year, days: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

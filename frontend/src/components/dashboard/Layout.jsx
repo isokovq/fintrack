@@ -8,7 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard, CreditCard, ArrowLeftRight, PieChart,
   Users, Calendar, Sparkles, Bell, LogOut, HandCoins, Repeat2,
-  Menu, X, ChevronLeft, BarChart3, Sun, Moon, TrendingUp, Target
+  Menu, X, ChevronLeft, BarChart3, Sun, Moon, TrendingUp, Target, Plus, Shield
 } from 'lucide-react';
 
 const FLAG_SVG = {
@@ -51,6 +51,8 @@ function Flag({ cc, size = 20 }) {
   return <span style={{ width: size, height: Math.round(size * 0.75), display: 'inline-flex', flexShrink: 0, borderRadius: 2, overflow: 'hidden' }}>{FLAG_SVG[cc]}</span>;
 }
 
+import TransactionModal from '../transactions/TransactionModal';
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const { t, lang, setLang } = useLanguage();
@@ -59,6 +61,7 @@ export default function Layout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const { data: notifData } = useQuery({
     queryKey: ['notifications'],
@@ -96,6 +99,7 @@ export default function Layout() {
     { to: '/reports', label: t('nav.reports'), icon: BarChart3 },
     { to: '/goals', label: t('nav.goals'), icon: Target },
     { to: '/subscriptions', label: t('nav.subscriptions'), icon: Repeat2 },
+    ...(user?.is_admin ? [{ to: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ];
 
   const isHome = location.pathname === '/';
@@ -229,6 +233,28 @@ export default function Layout() {
           </div>
         </div>
       </aside>
+
+      {/* Quick Add FAB */}
+      <button
+        className="fab-button"
+        onClick={() => setShowQuickAdd(true)}
+        title={t('dash.add_tx') || 'Add Transaction'}
+        style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 90,
+          width: 52, height: 52, borderRadius: '50%',
+          background: 'linear-gradient(135deg, var(--accent), var(--accent-dim))',
+          color: 'white', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+        }}
+        onMouseEnter={e => { e.target.style.transform = 'scale(1.1)'; e.target.style.boxShadow = '0 6px 20px rgba(79, 70, 229, 0.5)'; }}
+        onMouseLeave={e => { e.target.style.transform = 'scale(1)'; e.target.style.boxShadow = '0 4px 14px rgba(79, 70, 229, 0.4)'; }}
+      >
+        <Plus size={22} />
+      </button>
+
+      {showQuickAdd && <TransactionModal onClose={() => setShowQuickAdd(false)} />}
 
       <main className="main-content">
         <div className="topbar">

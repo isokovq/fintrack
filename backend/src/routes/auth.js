@@ -20,7 +20,7 @@ router.post('/register', async (req, res) => {
     );
 
     const user = result.rows[0];
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user.id, email: user.email, is_admin: false }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
     // Create a default cash account
     await db.query(
@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
       [user.id, 'Cash', 'cash', currency, 0]
     );
 
-    res.status(201).json({ token, user });
+    res.status(201).json({ token, user: { ...user, is_admin: false } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user.id, email: user.email, is_admin: !!user.is_admin }, process.env.JWT_SECRET, { expiresIn: '30d' });
     const { password_hash, ...safeUser } = user;
     res.json({ token, user: safeUser });
   } catch (err) {
@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', require('../middleware/auth'), async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, name, email, currency, family_id, created_at FROM users WHERE id=$1',
+      'SELECT id, name, email, currency, family_id, is_admin, plan, is_active, created_at FROM users WHERE id=$1',
       [req.user.id]
     );
     res.json(result.rows[0]);

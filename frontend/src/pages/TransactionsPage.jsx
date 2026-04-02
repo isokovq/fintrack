@@ -6,7 +6,7 @@ import api from '../utils/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import { translateCategory } from '../translations';
 import TransactionModal from '../components/transactions/TransactionModal';
-import { Plus, Pencil, Trash2, Search, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, CreditCard, TrendingUp, TrendingDown, Download } from 'lucide-react';
 import { SkeletonTableRow } from '../components/ui/Skeleton';
 import SwipeRow from '../components/ui/SwipeRow';
 import MonthNavigator from '../components/ui/MonthNavigator';
@@ -97,9 +97,23 @@ export default function TransactionsPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>{t('tx.title')}</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{data?.total || 0} {t('tx.total')}</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditTx(null); setShowModal(true); }}>
-          <Plus size={15} /> {t('tx.add')}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-ghost" onClick={async () => {
+            try {
+              const res = await api.get(`/transactions/export/csv?start_date=${startDate}&end_date=${endDate}`, { responseType: 'blob' });
+              const url = window.URL.createObjectURL(new Blob([res.data]));
+              const a = document.createElement('a');
+              a.href = url; a.download = `fintrack-${year}-${String(month).padStart(2,'0')}.csv`;
+              document.body.appendChild(a); a.click(); a.remove();
+              window.URL.revokeObjectURL(url);
+            } catch(e) { console.error('Export failed:', e); }
+          }} title={t('tx.export') || 'Export CSV'}>
+            <Download size={15} />
+          </button>
+          <button className="btn btn-primary" onClick={() => { setEditTx(null); setShowModal(true); }}>
+            <Plus size={15} /> {t('tx.add')}
+          </button>
+        </div>
       </div>
 
       {/* Month Navigator */}

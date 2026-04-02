@@ -1,7 +1,13 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const db = require('../db');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  console.error('⚠️  ANTHROPIC_API_KEY is not set! AI features will not work.');
+}
+const client = new Anthropic({ apiKey: apiKey || 'missing' });
+
+const MODEL = 'claude-sonnet-4-20250514';
 
 const LANG_NAMES = { en: 'English', ru: 'Russian', uz: 'Uzbek' };
 
@@ -15,7 +21,7 @@ async function suggestCategory(description, type, userId) {
     const catList = categories.rows.map(c => `${c.name} (id: ${c.id})`).join(', ');
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODEL,
       max_tokens: 100,
       messages: [{
         role: 'user',
@@ -73,7 +79,7 @@ async function analyzeSpending(userId, lang = 'en') {
     );
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODEL,
       max_tokens: 700,
       messages: [{
         role: 'user',
@@ -139,7 +145,7 @@ Give concise, actionable financial advice in ${langName}. Keep responses under 2
     const messages = [...history, { role: 'user', content: userMessage }];
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODEL,
       max_tokens: 300,
       system: systemPrompt,
       messages
@@ -152,4 +158,175 @@ Give concise, actionable financial advice in ${langName}. Keep responses under 2
   }
 }
 
-module.exports = { suggestCategory, analyzeSpending, chat };
+// Parse receipt image using Claude Vision
+async function parseReceipt(base64Image, mediaType, userId, lang = 'en') {
+  try {
+    const userRow = await db.query('SELECT currency FROM users WHERE id=$1', [userId]);
+    const currency = userRow.rows[0]?.currency || 'USD';
+    const langName = LANG_NAMES[lang] || 'English';
+
+    const categories = await db.query(
+      `SELECT id, name FROM categories WHERE (user_id=$1 OR is_default=true) AND type='expense'`,
+      [userId]
+    );
+    const catList = categories.rows.map(c => `${c.name} (id: ${c.id})`).join(', ');
+
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: mediaType, data: base64Image }
+          },
+          {
+            type: 'text',
+            text: `You are a receipt parser for a personal finance app. Analyze this receipt image and extract transaction data.
+
+The user's currency is ${currency}.
+
+Available expense categories: ${catList}
+
+Return a JSON object with:
+{
+  "items": [
+    {
+      "description": "item or store name",
+      "amount": number (in ${currency}),
+      "category_id": "UUID of best matching category",
+      "date": "YYYY-MM-DD" (from receipt, or today if not visible)
+    }
+  ],
+  "store_name": "name of store/merchant",
+  "total": number (total amount on receipt in ${currency}),
+  "date": "YYYY-MM-DD",
+  "summary": "brief description in ${langName}"
+}
+
+If you can identify individual line items, list them. If only a total is visible, return one item with the total.
+Return ONLY valid JSON, no markdown.`
+          }
+        ]
+      }]
+    });
+
+    const text = response.content[0].text.trim();
+    // Strip markdown code fences if present
+    const cleaned = text.replace(/^```json?\n?/i, '').replace(/\n?```$/i, '');
+    return JSON.parse(cleaned);
+  } catch (err) {
+    console.error('Receipt parsing failed:', err.message);
+    throw err;
+  }
+}
+
+// Financial health score calculation
+async function calculateHealthScore(userId) {
+  try {
+    const now = new Date();
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+    // Get current month income/expense
+    const statsResult = await db.query(`
+      SELECT
+        COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE 0 END), 0) as income,
+        COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END), 0) as expense
+      FROM transactions
+      WHERE user_id=$1 AND date >= $2
+    `, [userId, monthStart]);
+
+    const income = parseFloat(statsResult.rows[0].income);
+    const expense = parseFloat(statsResult.rows[0].expense);
+
+    // Get total balance
+    const balResult = await db.query(
+      'SELECT COALESCE(SUM(balance), 0) as total FROM accounts WHERE user_id=$1',
+      [userId]
+    );
+    const totalBalance = parseFloat(balResult.rows[0].total);
+
+    // Get budget adherence
+    const budgetResult = await db.query(`
+      SELECT COUNT(*) as total_budgets,
+        SUM(CASE WHEN spent <= amount THEN 1 ELSE 0 END) as within_budget
+      FROM (
+        SELECT b.amount,
+          COALESCE((SELECT SUM(t.amount) FROM transactions t
+            WHERE t.user_id=$1 AND t.category_id=b.category_id AND t.type='expense'
+            AND DATE_TRUNC('month', t.date) = DATE_TRUNC('month', CURRENT_DATE)), 0) as spent
+        FROM budgets b WHERE b.user_id=$1
+      ) sub
+    `, [userId]);
+
+    const totalBudgets = parseInt(budgetResult.rows[0].total_budgets || 0);
+    const withinBudget = parseInt(budgetResult.rows[0].within_budget || 0);
+
+    // Get debt situation
+    const debtResult = await db.query(
+      `SELECT COALESCE(SUM(remaining_amount), 0) as total_debt FROM debts WHERE user_id=$1 AND status='OPEN'`,
+      [userId]
+    );
+    const totalDebt = parseFloat(debtResult.rows[0].total_debt);
+
+    // Get goals progress
+    const goalsResult = await db.query(
+      `SELECT COUNT(*) as total, SUM(CASE WHEN current_amount >= target_amount THEN 1 ELSE 0 END) as achieved
+       FROM savings_goals WHERE user_id=$1`,
+      [userId]
+    );
+    const totalGoals = parseInt(goalsResult.rows[0].total || 0);
+    const achievedGoals = parseInt(goalsResult.rows[0].achieved || 0);
+
+    // Calculate score components (0-100)
+    let score = 50; // Base score
+    const breakdown = {};
+
+    // 1. Savings Rate (0-30 points)
+    const savingsRate = income > 0 ? ((income - expense) / income) : 0;
+    const savingsPoints = Math.min(Math.max(savingsRate * 100, 0), 30);
+    score += savingsPoints - 15; // -15 to 15 range
+    breakdown.savings_rate = { value: Math.round(savingsRate * 100), points: Math.round(savingsPoints) };
+
+    // 2. Budget Adherence (0-20 points)
+    const budgetScore = totalBudgets > 0 ? (withinBudget / totalBudgets) * 20 : 10;
+    score += budgetScore - 10;
+    breakdown.budget_adherence = { value: totalBudgets > 0 ? Math.round((withinBudget / totalBudgets) * 100) : null, points: Math.round(budgetScore) };
+
+    // 3. Balance Health (0-20 points)
+    const monthlyExpense = expense || 1;
+    const emergencyMonths = totalBalance / monthlyExpense;
+    const balancePoints = Math.min(emergencyMonths * 3.3, 20);
+    score += balancePoints - 10;
+    breakdown.emergency_fund = { value: Math.round(emergencyMonths * 10) / 10, points: Math.round(balancePoints) };
+
+    // 4. Debt-to-Income (0-15 points)
+    const dtiRatio = income > 0 ? totalDebt / (income * 12) : 0;
+    const debtPoints = Math.max(15 - dtiRatio * 30, 0);
+    score += debtPoints - 7.5;
+    breakdown.debt_ratio = { value: Math.round(dtiRatio * 100), points: Math.round(debtPoints) };
+
+    // 5. Goals Progress (0-15 points)
+    const goalProgress = totalGoals > 0 ? (achievedGoals / totalGoals) * 15 : 7.5;
+    score += goalProgress - 7.5;
+    breakdown.goals = { value: totalGoals > 0 ? Math.round((achievedGoals / totalGoals) * 100) : null, points: Math.round(goalProgress) };
+
+    // Clamp score
+    score = Math.min(Math.max(Math.round(score), 0), 100);
+
+    // Grade
+    let grade, color;
+    if (score >= 80) { grade = 'Excellent'; color = '#10b981'; }
+    else if (score >= 60) { grade = 'Good'; color = '#3b82f6'; }
+    else if (score >= 40) { grade = 'Fair'; color = '#f59e0b'; }
+    else { grade = 'Needs Work'; color = '#ef4444'; }
+
+    return { score, grade, color, breakdown };
+  } catch (err) {
+    console.error('Health score calculation failed:', err.message);
+    return { score: 50, grade: 'Unknown', color: '#94a3b8', breakdown: {} };
+  }
+}
+
+module.exports = { suggestCategory, analyzeSpending, chat, parseReceipt, calculateHealthScore };
